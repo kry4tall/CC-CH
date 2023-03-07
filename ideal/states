@@ -1,0 +1,30 @@
+3
+NodeState(name:0, round:4, highest_qc:QC(2||2), highest_qc_round:2, last_voted_round:3, preferred_round:2, committed:[BK(Node1, 1, QC(0||0), *)], message_to_send:[V(Node0, 0||3)])
+NodeState(name:1, round:4, highest_qc:QC(2||2), highest_qc_round:2, last_voted_round:3, preferred_round:2, committed:[BK(Node1, 1, QC(0||0), *)], message_to_send:[V(Node1, 0||3)])
+NodeState(name:2, round:4, highest_qc:QC(2||2), highest_qc_round:2, last_voted_round:3, preferred_round:2, committed:[BK(Node1, 1, QC(0||0), *)], message_to_send:[V(Node2, 0||3)])
+NodeState(name:3, round:4, highest_qc:QC(2||2), highest_qc_round:2, last_voted_round:3, preferred_round:2, committed:[BK(Node1, 1, QC(0||0), *)], message_to_send:[V(Node3, 0||3)])
+NodeState(name:4, round:4, highest_qc:QC(2||2), highest_qc_round:2, last_voted_round:3, preferred_round:2, committed:[BK(Node1, 1, QC(0||0), *)], message_to_send:[V(Node4, 4||3)])
+4
+NodeState(name:0, round:4, highest_qc:QC(2||2), highest_qc_round:2, last_voted_round:3, preferred_round:2, committed:[BK(Node1, 1, QC(0||0), *)], message_to_send:[BK(Node0, 5, QC(0||3), *)]),
+NodeState(name:1, round:4, highest_qc:QC(2||2), highest_qc_round:2, last_voted_round:3, preferred_round:2, committed:[BK(Node1, 1, QC(0||0), *)], message_to_send:None),
+NodeState(name:2, round:4, highest_qc:QC(2||2), highest_qc_round:2, last_voted_round:3, preferred_round:2, committed:[BK(Node1, 1, QC(0||0), *)], message_to_send:None),
+NodeState(name:3, round:4, highest_qc:QC(2||2), highest_qc_round:2, last_voted_round:3, preferred_round:2, committed:[BK(Node1, 1, QC(0||0), *)], message_to_send:None),
+NodeState(name:4, round:4, highest_qc:QC(2||2), highest_qc_round:2, last_voted_round:3, preferred_round:2, committed:[BK(Node1, 1, QC(0||0), *)], message_to_send:[BK(Node4, 5, QC(0||3), *)]).
+5
+NodeState(name:0, round:6, highest_qc:QC(0||3), highest_qc_round:3, last_voted_round:5, preferred_round:3, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *)], message_to_send:[V(Node0, 0||5)]),
+NodeState(name:1, round:6, highest_qc:QC(0||3), highest_qc_round:3, last_voted_round:5, preferred_round:3, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *)], message_to_send:[V(Node1, 0||5)]),
+NodeState(name:2, round:6, highest_qc:QC(0||3), highest_qc_round:3, last_voted_round:5, preferred_round:3, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *)], message_to_send:[V(Node2, 0||5)]),
+NodeState(name:3, round:6, highest_qc:QC(0||3), highest_qc_round:3, last_voted_round:5, preferred_round:3, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *)], message_to_send:[V(Node3, 0||5)]),
+NodeState(name:4, round:6, highest_qc:QC(0||3), highest_qc_round:3, last_voted_round:5, preferred_round:3, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *)], message_to_send:[V(Node4, 4||5)]).
+6
+NodeState(name:0, round:6, highest_qc:QC(0||3), highest_qc_round:3, last_voted_round:5, preferred_round:3, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *)], message_to_send:[BK(Node0, 7, QC(0||5), *)]),
+NodeState(name:1, round:6, highest_qc:QC(0||3), highest_qc_round:3, last_voted_round:5, preferred_round:3, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *)], message_to_send:None),
+NodeState(name:2, round:6, highest_qc:QC(0||3), highest_qc_round:3, last_voted_round:5, preferred_round:3, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *)], message_to_send:None),
+NodeState(name:3, round:6, highest_qc:QC(0||3), highest_qc_round:3, last_voted_round:5, preferred_round:3, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *)], message_to_send:None),
+NodeState(name:4, round:6, highest_qc:QC(0||3), highest_qc_round:3, last_voted_round:5, preferred_round:3, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *)], message_to_send:[BK(Node4, 7, QC(0||5), *)]).
+7
+NodeState(name:0, round:8, highest_qc:QC(0||5), highest_qc_round:5, last_voted_round:7, preferred_round:5, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *), BK(Node0, 3, QC(2||2), *)], message_to_send:[V(Node0, 0||7)]),
+NodeState(name:1, round:8, highest_qc:QC(0||5), highest_qc_round:5, last_voted_round:7, preferred_round:5, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *), BK(Node0, 3, QC(2||2), *)], message_to_send:[V(Node1, 0||7)]),
+NodeState(name:2, round:8, highest_qc:QC(0||5), highest_qc_round:5, last_voted_round:7, preferred_round:5, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *), BK(Node0, 3, QC(2||2), *)], message_to_send:[V(Node2, 0||7)]),
+NodeState(name:3, round:8, highest_qc:QC(0||5), highest_qc_round:5, last_voted_round:7, preferred_round:5, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *), BK(Node0, 3, QC(2||2), *)], message_to_send:[V(Node3, 0||7)]),
+NodeState(name:4, round:8, highest_qc:QC(0||5), highest_qc_round:5, last_voted_round:7, preferred_round:5, committed:[BK(Node1, 1, QC(0||0), *), BK(Node2, 2, QC(1||1), *), BK(Node0, 3, QC(2||2), *)], message_to_send:[V(Node4, 4||7)]).
