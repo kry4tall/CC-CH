@@ -83,9 +83,11 @@ class TwinsRunner:
             node_failure_setting = NodeFailureSettings(self.num_of_nodes + self.num_of_twins, 2, current_round)
             self.failures = node_failure_setting.failures
             for i, failure in enumerate(self.failures):
-
+                if i == 33:
+                    print()
                 self.set_network_phase_state(network, phase_state, current_round)
                 # run one phase
+
                 network.failure = failure
                 network.env = simpy.Environment()
                 network.run(150, current_round)
@@ -102,7 +104,8 @@ class TwinsRunner:
                 if self.n_list_merge_path[current_round - 3].get(new_phase_state.to_key()) is not None:
                     self.n_list_merge_path[current_round - 3][new_phase_state.to_key()] += 1
                 else:
-                    if current_round == 3 and self.n_list_merge_path[current_round - 3].get(new_phase_state.to_key()) is None:
+                    if current_round == 3 and self.n_list_merge_path[current_round - 3].get(
+                            new_phase_state.to_key()) is None:
                         self.n_list_merge_path[current_round - 3].setdefault(new_phase_state.to_key(), 1)
                     else:
                         if self.n_list_merge_path[current_round - 4].get(phase_state_key) is None:
@@ -122,8 +125,6 @@ class TwinsRunner:
                             self.temp_list[current_round - 3] += 1
                     else:
                         self.fail_states_dict_set.setdefault(new_phase_state.to_key(), new_phase_state)
-                        # time = datetime.datetime.now()
-                        # print(time)
 
                         nnn_num = self.n_list_merge_path[current_round - 3].get(new_phase_state.to_key())
 
@@ -132,23 +133,21 @@ class TwinsRunner:
                         self.n_list_merge_path[current_round - 3][new_phase_state.to_key()] = 0
 
                     T2 = time.time()
-                    # print(T2 - T1)
-                    if T2 - T1 > 500:
-                        return
+                    print(T2 - T1)
+                    # if T2 - T1 > 100:
+                    #     return
 
-                # if self.log_path is not None and self.states_safety_check(new_phase_state) is False:
-                #     file_path = join(self.log_path, f'failure-violating-{self.failed_times}.log')
-                    # if self.failed_times <= 99:
-                    #     self._print_log(file_path, network)
-                    #     self.failed_times += 1
+                if self.log_path is not None and self.states_safety_check(new_phase_state) is False:
+                    file_path = join(self.log_path, f'failure-violating-{self.failed_times}.log')
+                    if self.failed_times <= 99:
+                        self._print_log(file_path, new_phase_state)
+                        self.failed_times += 1
                 for n in network.nodes.values():
                     n.log.__init__()
                 network.node_states = PhaseState()
                 network.trace = []
             self.run_times_before_add_queue -= 1
             if self.run_times_before_add_queue == 0 or len(self.state_queue) == 0:
-                if self.temp_list[3] > 0:
-                    print()
                 self.add_state_queue()
         for i in range(5):
             print(len(self.list_of_dict[i]))
@@ -270,32 +269,29 @@ class TwinsRunner:
         with open(file_path, 'w') as f:
             f.write(''.join(data))
 
-    def _print_log(self, file_path, network):
+    def _print_log(self, file_path, state):
         data = [f'Settings: {self.num_of_nodes} nodes, {self.num_of_twins} ']
-        data += [f'twins, and {self.num_of_rounds} rounds.']
+        data += [f'twins, and {self.num_of_rounds} rounds.\n']
 
-        data += ['\n\nfailures:\n[']
-        failures = ''
-        for i, fai in enumerate(network.failure):
-            if isinstance(fai, NodeFailure):
-                failures += fai.__str__()
-                if i != len(network.failure) - 1:
-                    failures += ','
-        data += [failures]
+        # data += ['\n\nfailures:\n[']
+        # failures = ''
+        # for i, fai in enumerate(network.failure):
+        #     if isinstance(fai, NodeFailure):
+        #         failures += fai.__str__()
+        #         if i != len(network.failure) - 1:
+        #             failures += ','
+        # data += [failures]
         # if failures == '':
         #     logging.info(f'Failures: None')
         # else:
         #     logging.info(f'Failures: {failures}')
 
-        data += [']\n']
+        # data += [']\n']
 
         # data += ['\n\nNetwork logs:\n']
         # data += [f'{t}\n' for t in network.trace] + ['\n']
 
-        for n in network.nodes.values():
-            data += [f'\n\nNode{n.name} logs:\n']
-            data += [f'{t}\n' for t in n.log.log]
-            data += [f'\n{n.storage.__repr__()}']
+        data += [state.to_string()]
 
         with open(file_path, 'w') as f:
             f.write(''.join(data))
@@ -304,14 +300,24 @@ class TwinsRunner:
         longest = None
         dic = new_phase_state.node_state_dict
         for k, v in dic.items():
-            if k == 0 or k == 4: continue
+            if k == 0 or k == 4:
+                continue
             committed_blocks = v.committed
             committed_list = list(sorted(committed_blocks, key=lambda x: x.for_sort()))
             if longest is None:
                 longest = committed_list
                 continue
+
+            last_block_round = committed_list[0].round - 1
+            for blockchain in committed_list:
+                if blockchain.round == last_block_round:
+                    return False
+                last_block_round = blockchain.round
+
             for i in range(min(len(longest), len(committed_list))):
-                if longest[i].round == committed_list[i].round:
+                if longest[i].round != committed_list[i].round:
+                    return False
+                else:
                     if str(longest[i]) != str(committed_list[i]):
                         return False
             if len(longest) < len(committed_list):
