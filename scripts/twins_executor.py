@@ -59,7 +59,9 @@ class TwinsRunner:
         )
 
     def run(self):
+        runner.run_()
 
+    def _init_network(self):
         model = SyncModel()
         network = TwinsNetwork(
             None, model, self.num_of_twins, self.num_of_rounds
@@ -69,10 +71,9 @@ class TwinsRunner:
                  for i in range(self.num_of_nodes + self.num_of_twins)]
         [n.set_le(TwinsLE(n, network, [0, 4])) for n in nodes]
         [network.add_node(n) for n in nodes]
+        return network
 
-        runner.run_(network)
-
-    def run_(self, network):
+    def run_(self):
         self.init_queue()
         T1 = time.time()
         cnt = 0
@@ -83,8 +84,13 @@ class TwinsRunner:
             node_failure_setting = NodeFailureSettings(self.num_of_nodes + self.num_of_twins, 2, current_round)
             self.failures = node_failure_setting.failures
             for i, failure in enumerate(self.failures):
-                if i == 33:
-                    print()
+                # if current_round == 3:
+                #     if i != 66:
+                #         continue
+                # if current_round != 3:
+                #     if i != 0:
+                #         continue
+                network = self._init_network()
                 self.set_network_phase_state(network, phase_state, current_round)
                 # run one phase
 
@@ -132,8 +138,8 @@ class TwinsRunner:
                         cnt += nnn_num
                         self.n_list_merge_path[current_round - 3][new_phase_state.to_key()] = 0
 
-                    T2 = time.time()
-                    print(T2 - T1)
+                    # T2 = time.time()
+                    # print(T2 - T1)
                     # if T2 - T1 > 100:
                     #     return
 
@@ -146,11 +152,11 @@ class TwinsRunner:
                     n.log.__init__()
                 network.node_states = PhaseState()
                 network.trace = []
+                print("Finish failure " + str(i))
+            print("####################Finish round " + str(current_round))
             self.run_times_before_add_queue -= 1
             if self.run_times_before_add_queue == 0 or len(self.state_queue) == 0:
                 self.add_state_queue()
-        for i in range(5):
-            print(len(self.list_of_dict[i]))
         # T2 = time.time()
         # print("time:", T2 - T1)
         self.fail_states_dict_set = dict()
@@ -173,7 +179,8 @@ class TwinsRunner:
         # TODO：reverse the sorted_list
         sorted_list.reverse()
         self.state_queue.extendleft(sorted_list)
-        self.run_times_before_add_queue = self.top
+        # self.run_times_before_add_queue = self.top
+        self.run_times_before_add_queue = 300000
 
     def duplicate_checking(self, dict_set, new_phase_state):
         if dict_set.get(new_phase_state.to_key()) is not None:
@@ -299,10 +306,14 @@ class TwinsRunner:
     def states_safety_check(self, new_phase_state):
         longest = None
         dic = new_phase_state.node_state_dict
+
         for k, v in dic.items():
             if k == 0 or k == 4:
                 continue
             committed_blocks = v.committed
+            if len(committed_blocks) == 0:
+                continue
+
             committed_list = list(sorted(committed_blocks, key=lambda x: x.for_sort()))
             if longest is None:
                 longest = committed_list
