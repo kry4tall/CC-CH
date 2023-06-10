@@ -1,2 +1,2 @@
 # CC-CH
-cc on chained hotstuff
+cc on fast hotstuff
