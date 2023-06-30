@@ -3,7 +3,7 @@ from copy import deepcopy
 from scheduler.SaveState import *
 from sim.node import Node
 from sim.network import BColors, Network
-from fhs.messages import Message, Block, GenericVote, Vote, NewView
+from fhs.messages import Message, Block, GenericVote, Vote, NewView, QC
 from fhs.storage import NodeStorage, SyncStorage
 import logging
 
@@ -131,7 +131,10 @@ class FHSNode(Node):
             self.highest_qc_round = b1.round
 
         # Update the committed sequence.
-        self.storage.commit(b0)
+        temp = b0
+        while isinstance(temp.qc, QC):
+            self.storage.commit(temp)
+            temp = temp.qc.block(self.sync_storage)
         # self.storage.commit(b0)
         # self.log(f'Committing {b0}', color=BColors.OK)
 

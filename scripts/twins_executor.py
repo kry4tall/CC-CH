@@ -84,12 +84,12 @@ class TwinsRunner:
             node_failure_setting = NodeFailureSettings(self.num_of_nodes + self.num_of_twins, 2, current_round)
             self.failures = node_failure_setting.failures
             for i, failure in enumerate(self.failures):
-                # if current_round == 3:
-                #     if i != 66:
-                #         continue
-                # if current_round != 3:
-                #     if i != 0:
-                #         continue
+                if current_round == 3:
+                    if i != 66:
+                        continue
+                if current_round != 3:
+                    if i != 0:
+                        continue
                 network = self._init_network()
                 self.set_network_phase_state(network, phase_state, current_round)
                 # run one phase
