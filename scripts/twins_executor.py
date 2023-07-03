@@ -81,16 +81,19 @@ class TwinsRunner:
             phase_state = self.state_queue.popleft()
             phase_state_key = phase_state.to_key()
             current_round = phase_state.round + 1
-            parent_count = self.n_list_merge_path[current_round - 4].get(phase_state_key)
+            if current_round == 3:
+                parent_count = 1
+            else:
+                parent_count = self.n_list_merge_path[current_round - 4].get(phase_state_key)
             node_failure_setting = NodeFailureSettings(self.num_of_nodes + self.num_of_twins, 2, current_round)
             self.failures = node_failure_setting.failures
             for i, failure in enumerate(self.failures):
-                if current_round == 3:
-                    if i != 66:
-                        continue
-                if current_round != 3:
-                    if i != 0:
-                        continue
+                # if current_round == 3:
+                #     if i != 66:
+                #         continue
+                # if current_round != 3:
+                #     if i != 0:
+                #         continue
                 network = self._init_network()
                 self.set_network_phase_state(network, phase_state, current_round)
 
@@ -104,18 +107,20 @@ class TwinsRunner:
                 new_phase_state.sync_storage = deepcopy(next(iter(network.nodes.values())).sync_storage)
                 new_phase_state.round = current_round
 
+                self.count_merged_paths(current_round, parent_count, phase_state_key, new_phase_state)
+
                 # It is different between round of sending block and round of sending vote.
                 if current_round % 2 == 1:
                     new_phase_state.set_votes_abs()
                 else:
                     new_phase_state.set_if_bk_same()
 
+                # check duplicate
                 # check safety
                 # and
                 # store failure states
                 if self.duplicate_checking(self.list_of_states_dict_for_print[current_round - 3],
                                            new_phase_state) is False:
-                    self.count_merged_paths(current_round, parent_count, phase_state_key, new_phase_state)
                     if self.states_safety_check(new_phase_state) is True:
                         self.list_of_states_dict_for_print[current_round - 3].setdefault(new_phase_state.to_key(),
                                                                                          new_phase_state)
@@ -145,7 +150,8 @@ class TwinsRunner:
                 network.node_states = PhaseState()
                 network.trace = []
                 print("Finish failure " + str(i))
-            print("####################Finish round " + str(current_round))
+            print("##### Log #### Finish phase. Current state's round: " + str(current_round) +
+                  ". Current queue size: " + len(self.state_queue).__str__() + ".")
 
             # 为state排序
             # run_times_before_add_queue初始值1,1-1=0,首次调用add_state_queue
@@ -172,7 +178,9 @@ class TwinsRunner:
         self.temp_list = [0, 0, 0, 0]
         sorted_list.reverse()
         self.state_queue.extendleft(sorted_list)
-        self.run_times_before_add_queue = self.top
+        # self.run_times_before_add_queue = self.top
+        # no top
+        self.run_times_before_add_queue = sys.maxsize
 
     @staticmethod
     def duplicate_checking(dict_set, new_phase_state):
@@ -351,38 +359,17 @@ class TwinsRunner:
         return True
 
     def count_merged_paths(self, current_round, parent_count, parent_phase_state, new_phase_state):
-        # no duplicate state
-
-        # # XYY -- 用于计算合并掉的path数量
-        # # n_list_merge_path is list of dict
-        # # 列表中对应下标的字典中存在当前state,state出现次数加1
-        # # TODO: add change to mul
-        # if self.n_list_merge_path[current_round - 3].get(new_phase_state.to_key()) is not None:
-        #     self.n_list_merge_path[current_round - 3][new_phase_state.to_key()] += 1
-        # # 字典里不存在当前state
-        # else:
-        #     # 当前round == 3,当前state加入对应字典,次数初始化为1
-        #     if current_round == 3 and self.n_list_merge_path[current_round - 3].get(
-        #             new_phase_state.to_key()) is None:
-        #         self.n_list_merge_path[current_round - 3].setdefault(new_phase_state.to_key(), 1)
-        #     # 当前round > 3 或 state存在
-        #     # phase_state_key是new_phase_state的parent state
-        #     else:
-        #         # TODO： no use code
-        #         # parent state没有被统计过
-        #         if self.n_list_merge_path[current_round - 4].get(parent_phase_state) is None:
-        #             self.n_list_merge_path[current_round - 3].setdefault(new_phase_state.to_key(), 1)
-        #         # parent state被统计过,则parent state出现时都可以获得当前new state
-        #         else:
-        #             parent_count = self.n_list_merge_path[current_round - 4].get(parent_phase_state)
-        #             self.n_list_merge_path[current_round - 3].setdefault(new_phase_state.to_key(), parent_count)
-
+        # n_list_merge_path is list of dict
+        # 列表中对应下标的字典中存在当前state,state出现次数 + parent_state出现次数
         if self.n_list_merge_path[current_round - 3].get(new_phase_state.to_key()) is not None:
             self.n_list_merge_path[current_round - 3][new_phase_state.to_key()] += parent_count
+        # 字典里不存在当前state
         else:
             if current_round == 3:
+                # 当前round == 3, 当前state加入对应字典, 次数初始化为1
                 self.n_list_merge_path[current_round - 3].setdefault(new_phase_state.to_key(), 1)
             else:
+                # parent state被统计过,则parent state出现时都可以获得当前new state
                 parent_count = self.n_list_merge_path[current_round - 4].get(parent_phase_state)
                 self.n_list_merge_path[current_round - 3].setdefault(new_phase_state.to_key(), parent_count)
 
