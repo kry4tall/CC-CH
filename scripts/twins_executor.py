@@ -38,7 +38,7 @@ class TwinsRunner:
         self.top = None
 
         # XYY
-        self.n_list_merge_path = []
+        self.list_of_dict_key_and_path_count = []
 
         with open(file_path) as f:
             data = load(f)
@@ -75,7 +75,6 @@ class TwinsRunner:
 
     def run_(self):
         self.init_queue()
-        T1 = time.time()
         cnt = 0
         while len(self.state_queue) != 0:
             phase_state = self.state_queue.popleft()
@@ -84,7 +83,7 @@ class TwinsRunner:
             if current_round == 3:
                 parent_count = 1
             else:
-                parent_count = self.n_list_merge_path[current_round - 4].get(phase_state_key)
+                parent_count = self.list_of_dict_key_and_path_count[current_round - 4].get(phase_state_key)
             node_failure_setting = NodeFailureSettings(self.num_of_nodes + self.num_of_twins, 2, current_round)
             self.failures = node_failure_setting.failures
             for i, failure in enumerate(self.failures):
@@ -131,14 +130,14 @@ class TwinsRunner:
                     else:
                         self.fail_states_dict_set.setdefault(new_phase_state.to_key(), new_phase_state)
 
-                        nnn_num = self.n_list_merge_path[current_round - 3].get(new_phase_state.to_key())
+                        nnn_num = self.list_of_dict_key_and_path_count[current_round - 3].get(new_phase_state.to_key())
 
                         # TODO: print to log
-                        print("Find " + str(nnn_num) + " bugs!")
+                        print("Find bug which can be reproduced from " + str(nnn_num) + " bug path!")
                         cnt += nnn_num
 
                         # bug state 不会作为 parent state
-                        self.n_list_merge_path[current_round - 3][new_phase_state.to_key()] = 0
+                        self.list_of_dict_key_and_path_count[current_round - 3][new_phase_state.to_key()] = 0
 
                 if self.log_path is not None and self.states_safety_check(new_phase_state) is False:
                     file_path = join(self.log_path, f'failure-violating-{self.failed_times}.log')
@@ -158,6 +157,10 @@ class TwinsRunner:
             # 下一次调用add_state_queue前执行top次循环,处理掉top个最优先的state
             self.run_times_before_add_queue -= 1
             if self.run_times_before_add_queue == 0 or len(self.state_queue) == 0:
+                sum_x = 0
+                target_dict = self.list_of_dict_key_and_path_count[current_round - 3]
+                for key in target_dict.keys():
+                    sum_x += target_dict[key]
                 self.add_state_queue()
         self.fail_states_dict_set = dict()
 
@@ -361,17 +364,17 @@ class TwinsRunner:
     def count_merged_paths(self, current_round, parent_count, parent_phase_state, new_phase_state):
         # n_list_merge_path is list of dict
         # 列表中对应下标的字典中存在当前state,state出现次数 + parent_state出现次数
-        if self.n_list_merge_path[current_round - 3].get(new_phase_state.to_key()) is not None:
-            self.n_list_merge_path[current_round - 3][new_phase_state.to_key()] += parent_count
+        if self.list_of_dict_key_and_path_count[current_round - 3].get(new_phase_state.to_key()) is not None:
+            self.list_of_dict_key_and_path_count[current_round - 3][new_phase_state.to_key()] += parent_count
         # 字典里不存在当前state
         else:
             if current_round == 3:
                 # 当前round == 3, 当前state加入对应字典, 次数初始化为1
-                self.n_list_merge_path[current_round - 3].setdefault(new_phase_state.to_key(), 1)
+                self.list_of_dict_key_and_path_count[current_round - 3].setdefault(new_phase_state.to_key(), 1)
             else:
                 # parent state被统计过,则parent state出现时都可以获得当前new state
-                parent_count = self.n_list_merge_path[current_round - 4].get(parent_phase_state)
-                self.n_list_merge_path[current_round - 3].setdefault(new_phase_state.to_key(), parent_count)
+                parent_count = self.list_of_dict_key_and_path_count[current_round - 4].get(parent_phase_state)
+                self.list_of_dict_key_and_path_count[current_round - 3].setdefault(new_phase_state.to_key(), parent_count)
 
 
 if __name__ == '__main__':
@@ -400,7 +403,7 @@ if __name__ == '__main__':
 
     for i in range(rounds_of_protocol - 2):
         runner.list_of_states_dict_for_print.append(dict())
-        runner.n_list_merge_path.append(dict())
+        runner.list_of_dict_key_and_path_count.append(dict())
 
     # how many failures in one scenario
     # random seed
