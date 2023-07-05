@@ -72,13 +72,13 @@ class FHSNode(Node):
             #     message = message.qc.block(self.sync_storage)
             self.sync_storage.add_block(message)
             self._process_qc(message.qc)
-            self._process_block(message, 0)
+            self._process_block(message)
 
         # Handle incoming votes and new view messages.
         elif isinstance(message, GenericVote):
             qc = self.storage.add_vote(message)
             if qc is not None:
-                self._process_block(qc.block(self.sync_storage), 1)
+                self._process_block(qc.block(self.sync_storage))
                 block = Block(qc, self.round + 1, self.name)
                 # do not broadcast
                 # self.network.broadcast(self, block)
@@ -101,7 +101,7 @@ class FHSNode(Node):
         else:
             assert False  # pragma: no cover
 
-    def _process_block(self, block, flag):
+    def _process_block(self, block):
         prev_block = block.qc.block(self.sync_storage)
 
         # Check if we can vote for the block.
@@ -113,9 +113,6 @@ class FHSNode(Node):
             self.timeout = self.DELAY
             self.last_voted_round = block.round
             self.round = max(self.round, block.round + 1)
-            # if flag = 1, there is a QC, no need to vote
-            if flag == 1:
-                return
             vote = Vote(block.digest(), self.name)
             vote.round = self.round
             indeces = self.le.get_leader(round=block.round + 1)
@@ -187,7 +184,9 @@ class FHSNode(Node):
                 mutate_msg(vote)
 
             self.log(f'Sending vote {vote} to {[0, 4]}')
+            # self.log(f'Sending vote {vote} to {[0]}')
             next_leaders = [self.network.nodes[x] for x in [0, 4]]
+            # next_leaders = [self.network.nodes[x] for x in [0]]
             [self.network.send(self, x, vote) for x in next_leaders]
         while True:
             yield self.network.env.timeout(1000)
