@@ -1,3 +1,5 @@
+import random
+import sys
 from copy import deepcopy
 
 from scheduler.SaveState import *
@@ -6,6 +8,26 @@ from sim.network import BColors, Network
 from fhs.messages import Message, Block, GenericVote, Vote, NewView, QC
 from fhs.storage import NodeStorage, SyncStorage
 import logging
+
+
+def is_byzantine_node(node_name) -> bool:
+    if node_name == 0 or node_name == 4:
+        return True
+    else:
+        return False
+
+
+def mutate_msg(message):
+    # Because of the existence of the signature, twins can only mutate messages sent by themselves
+    random_num = random.randint(0, sys.maxsize)
+    if isinstance(message, Block):
+        # mutate block
+        # change round || block_hash of vote voted by self in QC
+        print()
+    else:
+        # mutate vote
+        # change round || block_hash
+        print()
 
 
 class FHSNode(Node):
@@ -41,7 +63,8 @@ class FHSNode(Node):
             return -1
 
         if not (isinstance(message, Message) and message.verify(self.network)):
-            assert False  # pragma: no cover
+            # assert False  # pragma: no cover
+            return -2
 
         # Handle incoming blocks.
         if isinstance(message, Block):
@@ -65,7 +88,7 @@ class FHSNode(Node):
                     self.has_message_to_send_flag = True
                     temp_leader_state = NodeState(self.round, self.name, self.highest_qc,
                                                   self.highest_qc_round, self.last_voted_round, self.preferred_round,
-                                                  self.storage.committed, self.storage.votes, [block])
+                                                  self.storage.committed, self.storage.votes, block)
                     if isinstance(self.network, Network):
                         self.network.node_states.node_state_dict.update({self.name: temp_leader_state})
             elif self.has_message_to_send_flag is False:
@@ -104,7 +127,7 @@ class FHSNode(Node):
             self.has_message_to_send_flag = True
             temp_follower_state = NodeState(self.round, self.name, self.highest_qc,
                                               self.highest_qc_round, self.last_voted_round, self.preferred_round,
-                                              self.storage.committed, self.storage.votes, [vote])
+                                              self.storage.committed, self.storage.votes, vote)
             if isinstance(self.network, Network):
                 self.network.node_states.node_state_dict.update({self.name: temp_follower_state})
         elif self.has_message_to_send_flag is False:
@@ -149,15 +172,22 @@ class FHSNode(Node):
 
         if self.is_leader() and current_round == 3:
             block = Block(self.highest_qc, self.round, self.name)
+            # leader is byzantine node
+            mutate_msg(block)
             self.network.broadcast(self, block)
         elif self.is_leader() and current_round % 2 == 1 and self.message_to_send is not None:
-            for block in self.message_to_send:
-                self.network.broadcast(self, block)
+            block = self.message_to_send
+            # leader is byzantine node
+            mutate_msg(block)
+            self.network.broadcast(self, block)
         elif current_round % 2 == 0 and self.message_to_send is not None:
             # follower send vote
-            for vote in self.message_to_send:
-                # self.log(f'Sending vote {vote} to {[0, 4]}')
-                next_leaders = [self.network.nodes[x] for x in [0, 4]]
-                [self.network.send(self, x, vote) for x in next_leaders]
+            vote = self.message_to_send
+            if is_byzantine_node(self.name):
+                mutate_msg(vote)
+
+            self.log(f'Sending vote {vote} to {[0, 4]}')
+            next_leaders = [self.network.nodes[x] for x in [0, 4]]
+            [self.network.send(self, x, vote) for x in next_leaders]
         while True:
             yield self.network.env.timeout(1000)

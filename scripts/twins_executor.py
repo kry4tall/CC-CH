@@ -33,7 +33,6 @@ class TwinsRunner:
         self.list_of_states_dict_for_print = []
         self.state_queue = deque()
         self.temp_dict = dict()
-        self.temp_list = [0, 0, 0, 0]  # store num of different round in temp_dict
         self.fail_states_dict_set = dict()
         self.top = None
 
@@ -48,6 +47,8 @@ class TwinsRunner:
         self.scenarios = data['scenarios']
         # how many rounds in one phase
         self.num_of_rounds = num_of_rounds
+        self.num_of_rounds_need_to_add_queue = num_of_rounds - 3
+        self.temp_list = [0 for i in range(self.num_of_rounds_need_to_add_queue)]  # store num of different round in temp_dict
         self.seed = None
         self.failures = None
         self.failed_times = 0
@@ -87,12 +88,12 @@ class TwinsRunner:
             node_failure_setting = NodeFailureSettings(self.num_of_nodes + self.num_of_twins, 2, current_round)
             self.failures = node_failure_setting.failures
             for i, failure in enumerate(self.failures):
-                # if current_round == 3:
-                #     if i != 66:
-                #         continue
-                # if current_round != 3:
-                #     if i != 0:
-                #         continue
+                if current_round == 3:
+                    if i != 66:
+                        continue
+                if current_round != 3:
+                    if i != 0:
+                        continue
                 network = self._init_network()
                 self.set_network_phase_state(network, phase_state, current_round)
 
@@ -123,8 +124,7 @@ class TwinsRunner:
                     if self.states_safety_check(new_phase_state) is True:
                         self.list_of_states_dict_for_print[current_round - 3].setdefault(new_phase_state.to_key(),
                                                                                          new_phase_state)
-                        # no need to check duplicate
-                        if current_round != 7:
+                        if current_round != self.num_of_rounds:
                             self.temp_dict.setdefault(new_phase_state.to_key(), new_phase_state)
                             self.temp_list[current_round - 3] += 1
                     else:
@@ -139,7 +139,7 @@ class TwinsRunner:
                         # bug state 不会作为 parent state
                         self.list_of_dict_key_and_path_count[current_round - 3][new_phase_state.to_key()] = 0
 
-                if self.log_path is not None and self.states_safety_check(new_phase_state) is False:
+                if self.log_path is not None and self.states_safety_check(new_phase_state) is True:
                     file_path = join(self.log_path, f'failure-violating-{self.failed_times}.log')
                     if self.failed_times <= 99:
                         self._print_log(file_path, new_phase_state)
@@ -170,15 +170,15 @@ class TwinsRunner:
         rs = RoundSorting(self.temp_dict).sorted_state_list
         start = 0
         sorted_list = list()
-        for i in range(4):
-            round_num = self.temp_list[3 - i]
+        for i in range(self.num_of_rounds_need_to_add_queue):
+            round_num = self.temp_list[self.num_of_rounds_need_to_add_queue - 1 - i]
             if round_num != 0:
                 li = rs[start:start + round_num]
                 start = start + round_num
-                po = PrioritySorting(6 - i, li).sorted_state_list
+                po = PrioritySorting(self.num_of_rounds - 1 - i, li).sorted_state_list
                 sorted_list += po
         self.temp_dict = dict()
-        self.temp_list = [0, 0, 0, 0]
+        self.temp_list = [0 for i in range(self.num_of_rounds_need_to_add_queue)]
         sorted_list.reverse()
         self.state_queue.extendleft(sorted_list)
         # self.run_times_before_add_queue = self.top

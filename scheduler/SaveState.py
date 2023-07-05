@@ -19,7 +19,7 @@ class PhaseState:
         count = 0
         for i, node_state in enumerate(self.node_state_dict.values()):
             if node_state.message_to_send is not None:
-                block_hash = node_state.message_to_send[0].block_hash
+                block_hash = node_state.message_to_send.block_hash
                 if bh1 is None:
                     bh1 = block_hash
                     count += 1
@@ -34,7 +34,7 @@ class PhaseState:
         bh1 = None
         for i, node_state in enumerate(self.node_state_dict.values()):
             if node_state.message_to_send is not None:
-                block_hash = str(node_state.message_to_send[0].qc)
+                block_hash = str(node_state.message_to_send.qc)
                 if bh1 is None:
                     bh1 = block_hash
                 elif block_hash == bh1:
@@ -72,7 +72,7 @@ class PhaseState:
             for i, node_state_i in enumerate(self.node_state_dict.values()):
                 if node_state_i.node_name == 0 or node_state_i.node_name == 4:
                     if node_state_i.message_to_send is not None:
-                        msg_i = node_state_i.message_to_send[0]
+                        msg_i = node_state_i.message_to_send
                         msg_count_list.append(msg_i.qc.for_key())
             if len(msg_count_list) > 1:
                 if msg_count_list[0] != msg_count_list[1]:
@@ -84,7 +84,7 @@ class PhaseState:
             # compare vote
             for i, node_state_i in enumerate(self.node_state_dict.values()):
                 if node_state_i.message_to_send is not None:
-                    msg_i = node_state_i.message_to_send[0]
+                    msg_i = node_state_i.message_to_send
                     if msg_i.block_hash not in msg_type_dict:
                         msg_type_dict.update({msg_i.block_hash: 1})
                     else:
@@ -232,7 +232,7 @@ class NodeState:
         self.preferred_round = preferred_round
         self.committed = committed
         self.votes = votes
-        self.message_to_send = message_to_send
+        self.message_to_send = message_to_send  # list but only one element
         self.dict_key = node_name
 
     def to_string(self) -> str:
@@ -253,7 +253,7 @@ class NodeState:
         if self.message_to_send is None:
             result += f', message_to_send:None'
         else:
-            result += f', message_to_send:{sorted(self.message_to_send, key=lambda x: x.for_sort())}'
+            result += f', message_to_send:{self.message_to_send}'
         result += f')'
         return result
 
@@ -277,9 +277,7 @@ class NodeState:
         if self.message_to_send is None:
             result += f',None'
         else:
-            message_to_send = sorted(self.message_to_send, key=lambda x: x.for_sort())
-            keys = [i.for_key() for i in message_to_send]
-            result += f',{keys}'
+            result += f',{self.message_to_send.for_key()}'
         return result
 
     def to_cal_entropy(self) -> str:

@@ -64,8 +64,9 @@ class Network:
         self.trace.append(entry)
         # tox.log(entry, color=BColors.INFO)
         # Deliver messages.
-        if tox.receive(fromx, tox, message, self.failure) == -1:
-            self.trace.pop()
+        if tox.receive(fromx, tox, message, self.failure) is not None:
+            if tox.receive(fromx, tox, message, self.failure) < 0:
+                self.trace.pop()
 
     def print_trace(self, filter=None):
         print()
