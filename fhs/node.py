@@ -10,26 +10,6 @@ from fhs.storage import NodeStorage, SyncStorage
 import logging
 
 
-def is_byzantine_node(node_name) -> bool:
-    if node_name == 0 or node_name == 4:
-        return True
-    else:
-        return False
-
-
-def mutate_msg(message):
-    # Because of the existence of the signature, twins can only mutate messages sent by themselves
-    random_num = random.randint(0, sys.maxsize)
-    if isinstance(message, Block):
-        # mutate block
-        # change round || block_hash of vote voted by self in QC
-        print()
-    else:
-        # mutate vote
-        # change round || block_hash
-        print()
-
-
 class FHSNode(Node):
     DELAY = 15  # Delay before timeout.
 
@@ -105,7 +85,7 @@ class FHSNode(Node):
         prev_block = block.qc.block(self.sync_storage)
 
         # Check if we can vote for the block.
-        check = block.author in [0, 4]
+        check = block.author in self.le.get_leader()
         check &= block.round > self.last_voted_round
         check &= prev_block.round >= self.preferred_round
         if check:
@@ -114,9 +94,9 @@ class FHSNode(Node):
             self.last_voted_round = block.round
             self.round = max(self.round, block.round + 1)
             vote = Vote(block.digest(), self.name)
-            vote.round = self.round
-            indeces = self.le.get_leader(round=block.round + 1)
-            next_leaders = [self.network.nodes[x] for x in indeces]
+            vote.round = block.round
+            # indeces = self.le.get_leader(round=block.round + 1)
+            # next_leaders = [self.network.nodes[x] for x in indeces]
             # self.log(f'Sending vote {vote} to {next_leaders}')
             # do not vote
             # [self.network.send(self, x, vote) for x in next_leaders]
@@ -159,7 +139,8 @@ class FHSNode(Node):
         # self.log(f'Committing {b0}', color=BColors.OK)
 
     def is_leader(self):
-        if self.name in [0, 4]:
+        leader = self.le.get_leader(self.round)
+        if self.name in leader:
             return True
         else:
             return False
@@ -169,24 +150,17 @@ class FHSNode(Node):
 
         if self.is_leader() and current_round == 3:
             block = Block(self.highest_qc, self.round, self.name)
-            # leader is byzantine node
-            mutate_msg(block)
             self.network.broadcast(self, block)
         elif self.is_leader() and current_round % 2 == 1 and self.message_to_send is not None:
             block = self.message_to_send
-            # leader is byzantine node
-            mutate_msg(block)
             self.network.broadcast(self, block)
         elif current_round % 2 == 0 and self.message_to_send is not None:
             # follower send vote
             vote = self.message_to_send
-            if is_byzantine_node(self.name):
-                mutate_msg(vote)
 
-            self.log(f'Sending vote {vote} to {[0, 4]}')
-            # self.log(f'Sending vote {vote} to {[0]}')
-            next_leaders = [self.network.nodes[x] for x in [0, 4]]
-            # next_leaders = [self.network.nodes[x] for x in [0]]
+            indeces = self.le.get_leader(round=vote.round + 1)
+            next_leaders = [self.network.nodes[x] for x in indeces]
+            self.log(f'Sending vote {vote} to {next_leaders}')
             [self.network.send(self, x, vote) for x in next_leaders]
         while True:
             yield self.network.env.timeout(1000)
