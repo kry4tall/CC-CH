@@ -55,14 +55,15 @@ class TwinsRunner:
         self.run_times_before_add_queue = 1
         logging.debug(f'Scenario file {args.path} successfully loaded.')
         logging.info(
-            f'Settings: {self.num_of_nodes} nodes, {self.num_of_twins} twins, '
-            f'and {len(self.scenarios)} scenarios.'
+            f'Settings: {self.num_of_nodes} nodes, {self.num_of_twins} twins.'
         )
 
     def run(self):
         runner.run_()
 
     def _init_network(self):
+        only_one_leader_path = self.scenarios[0]
+        round_leaders = only_one_leader_path['round_leaders']
         model = SyncModel()
         network = TwinsNetwork(
             None, model, self.num_of_twins, self.num_of_rounds
@@ -70,13 +71,14 @@ class TwinsRunner:
 
         nodes = [self.NodeClass(i, network, *self.node_args)
                  for i in range(self.num_of_nodes + self.num_of_twins)]
-        [n.set_le(TwinsLE(n, network, [0, 4])) for n in nodes]
+        [n.set_le(TwinsLE(n, network, round_leaders)) for n in nodes]
         [network.add_node(n) for n in nodes]
         return network
 
     def run_(self):
         self.init_queue()
         cnt = 0
+        flag_x = True
         while len(self.state_queue) != 0:
             phase_state = self.state_queue.popleft()
             phase_state_key = phase_state.to_key()
@@ -88,15 +90,10 @@ class TwinsRunner:
             node_failure_setting = NodeFailureSettings(self.num_of_nodes + self.num_of_twins, 2, current_round)
             self.failures = node_failure_setting.failures
             for i, failure in enumerate(self.failures):
-                if current_round == 3:
-                    if i != 66:
-                        continue
-                if current_round != 3:
-                    if i != 0:
-                        continue
+                if i > 0:
+                    break
                 network = self._init_network()
-                self.set_network_phase_state(network, phase_state, current_round)
-
+                self.set_network_by_phase_state(network, phase_state, current_round)
                 network.failure = failure
                 network.env = simpy.Environment()
                 network.run(150, current_round)
@@ -139,7 +136,10 @@ class TwinsRunner:
                         # bug state 不会作为 parent state
                         self.list_of_dict_key_and_path_count[current_round - 3][new_phase_state.to_key()] = 0
 
-                if self.log_path is not None and self.states_safety_check(new_phase_state) is True:
+                if flag_x is True:
+                    file_path = join(self.log_path, f'phase-state-log-{current_round}.log')
+                    self._print_log(file_path, new_phase_state)
+                if self.log_path is not None and self.states_safety_check(new_phase_state) is False:
                     file_path = join(self.log_path, f'failure-violating-{self.failed_times}.log')
                     if self.failed_times <= 99:
                         self._print_log(file_path, new_phase_state)
@@ -217,7 +217,7 @@ class TwinsRunner:
         ps.round = 2
         self.state_queue.append(ps)
 
-    def set_network_phase_state(self, network, phase_state, current_round):
+    def set_network_by_phase_state(self, network, phase_state, current_round):
         if current_round == 3:
             for x in network.nodes.values():
                 x.last_voted_round = 2

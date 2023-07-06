@@ -94,7 +94,7 @@ class FHSNode(Node):
             self.last_voted_round = block.round
             self.round = max(self.round, block.round + 1)
             vote = Vote(block.digest(), self.name)
-            vote.round = block.round
+            vote.round = block.round + 1
             # indeces = self.le.get_leader(round=block.round + 1)
             # next_leaders = [self.network.nodes[x] for x in indeces]
             # self.log(f'Sending vote {vote} to {next_leaders}')
@@ -103,8 +103,8 @@ class FHSNode(Node):
             # do save node state as a follower
             self.has_message_to_send_flag = True
             temp_follower_state = NodeState(self.round, self.name, self.highest_qc,
-                                              self.highest_qc_round, self.last_voted_round, self.preferred_round,
-                                              self.storage.committed, self.storage.votes, vote)
+                                            self.highest_qc_round, self.last_voted_round, self.preferred_round,
+                                            self.storage.committed, self.storage.votes, vote)
             if isinstance(self.network, Network):
                 self.network.node_states.node_state_dict.update({self.name: temp_follower_state})
         elif self.has_message_to_send_flag is False:
@@ -147,6 +147,7 @@ class FHSNode(Node):
 
     def send(self, current_round):
         """ Main loop triggering timeouts. """
+        # current failure
 
         if self.is_leader() and current_round == 3:
             block = Block(self.highest_qc, self.round, self.name)
@@ -157,8 +158,8 @@ class FHSNode(Node):
         elif current_round % 2 == 0 and self.message_to_send is not None:
             # follower send vote
             vote = self.message_to_send
-
-            indeces = self.le.get_leader(round=vote.round + 1)
+            self.round = max(self.round, vote.round + 1)
+            indeces = self.le.get_leader(round=vote.round)
             next_leaders = [self.network.nodes[x] for x in indeces]
             self.log(f'Sending vote {vote} to {next_leaders}')
             [self.network.send(self, x, vote) for x in next_leaders]
