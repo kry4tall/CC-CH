@@ -66,10 +66,11 @@ class NodeStorage():
 
     def commit(self, block):
         # TODO: Should we also commit all ancestors?
-        block_str = f'{block}'
-        committed_str = f'{sorted(self.committed, key=lambda x: x.for_sort())}'
-        if block_str not in committed_str:
-            self.committed.add(block)
+        self.committed.add(block)
+        # block_str = f'{block}'
+        # committed_str = f'{sorted(self.committed, key=lambda x: x.for_sort())}'
+        # if block_str not in committed_str:
+        #     self.committed.add(block)
 
     def _can_make_qc(self, collection, key, value):
         before = len(collection[key]) >= self.node.network.quorum
