@@ -1,0 +1,5 @@
+simpy==4.0.1
+numpy==1.25.1
+pytest
+pytest-cov
+argparse==1.4.0
