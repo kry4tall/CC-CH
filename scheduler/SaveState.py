@@ -145,7 +145,7 @@ class PhaseState:
             if self.node_state_dict.get(i) is None:
                 result += 'None,\n'
             else:
-                result += self.node_state_dict.get(0).to_string()
+                result += self.node_state_dict.get(i).to_string()
                 result += ',\n'
         result += 'Sync_storage: \n'
         if self.sync_storage is None:
