@@ -101,6 +101,21 @@ class NewView(GenericVote):
     def __repr__(self):
         return f'NV(Node{self.author}, {self.round}, {self.qc})'
 
+    def __eq__(self, other):
+        if self.qc == other.qc and self.round == other.round and self.author == other.author:
+            return True
+        else:
+            return False
+
+    def __hash__(self) -> int:
+        return super().__hash__()
+
+    def for_sort(self):
+        return f'{self.author},{self.round},{self.qc.for_key()}'
+
+    def for_key(self):
+        return f'{self.author},{self.round},{self.qc.for_key()}'
+
 
 # --- QCs ---
 

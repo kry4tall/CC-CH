@@ -79,14 +79,14 @@ class TwinsRunner:
         only_one_leader_path = self.scenarios[0]
         round_leaders = only_one_leader_path['round_leaders']
         if str(current_round) in round_leaders:
-            return round_leaders[str(current_round)]
+            return round_leaders[str(current_round)][0]
         else:
             assert False
 
     def run_(self):
         self.init_queue()
         cnt = 0
-        flag_x = True
+        flag_x = False
         while len(self.state_queue) != 0:
             phase_state = self.state_queue.popleft()
             phase_state_key = phase_state.to_key()
@@ -115,10 +115,11 @@ class TwinsRunner:
                 self.count_merged_paths(current_round, parent_count, phase_state_key, new_phase_state)
 
                 # It is different between round of sending block and round of sending vote.
-                if current_round % 2 == 1:
-                    new_phase_state.set_votes_abs()
-                else:
-                    new_phase_state.set_if_bk_same()
+                #  TODO: modify sorting method
+                # if current_round % 2 == 1:
+                #     new_phase_state.set_votes_abs()
+                # else:
+                #     new_phase_state.set_if_bk_same()
 
                 # check duplicate
                 # check safety
@@ -145,13 +146,14 @@ class TwinsRunner:
                         self.list_of_dict_key_and_path_count[current_round - 3][new_phase_state.to_key()] = 0
 
                 if flag_x is True:
-                    file_path = join(self.log_path, f'phase-state-log-{current_round}.log')
+                    file_path = join(self.log_path, f'phase-state-log-{current_round}-failure-{i}.log')
                     self._print_log(file_path, new_phase_state)
                 if self.log_path is not None and self.states_safety_check(new_phase_state) is False:
                     file_path = join(self.log_path, f'failure-violating-{self.failed_times}.log')
                     if self.failed_times <= 99:
                         self._print_log(file_path, new_phase_state)
                         self.failed_times += 1
+                    assert False
                 for n in network.nodes.values():
                     n.log.__init__()
                 network.node_states = PhaseState()
@@ -321,31 +323,23 @@ class TwinsRunner:
         dic = new_phase_state.node_state_dict
 
         for k, v in dic.items():
-            if k == 0 or k == 4:
-                continue
-            committed_blocks = v.committed
-            if len(committed_blocks) == 0:
+            i_node_committed = v.committed
+            if len(i_node_committed) == 0:
                 continue
 
-            committed_list = list(sorted(committed_blocks, key=lambda x: x.for_sort()))
+            i_node_committed_list = list(sorted(i_node_committed, key=lambda x: x.for_sort()))
             if longest is None:
-                longest = committed_list
+                longest = i_node_committed_list
                 continue
 
-            last_block_round = committed_list[0].round - 1
-            for blockchain in committed_list:
-                if blockchain.round == last_block_round:
-                    return False
-                last_block_round = blockchain.round
-
-            for i in range(min(len(longest), len(committed_list))):
-                if longest[i].round != committed_list[i].round:
+            for i in range(min(len(longest), len(i_node_committed_list))):
+                if longest[i].round != i_node_committed_list[i].round:
                     return False
                 else:
-                    if str(longest[i]) != str(committed_list[i]):
+                    if str(longest[i]) != str(i_node_committed_list[i]):
                         return False
-            if len(longest) < len(committed_list):
-                longest = committed_list
+            if len(longest) < len(i_node_committed_list):
+                longest = i_node_committed_list
         return True
 
     def check_safety(self, network):

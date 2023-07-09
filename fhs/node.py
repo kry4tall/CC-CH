@@ -30,14 +30,13 @@ class FHSNode(Node):
         self.storage = NodeStorage(self)
         self.message_to_send = None
         self.has_message_to_send_flag = False
-        self.block_was_dropped = False
 
     def receive(self, fromx, tox, message, failure):
         """ Handles incoming messages. """
         current_round = message.round
 
         # drop message
-        if message.is_to_drop(fromx, tox, failure):
+        if len(failure) > 0 and message.is_to_drop(fromx, tox, failure):
             #  TODO: check if block was dropped. If true, send new view.
             #  self.name == tox.name
             #  is block
