@@ -30,6 +30,7 @@ class FHSNode(Node):
         self.storage = NodeStorage(self)
         self.message_to_send = None
         self.has_message_to_send_flag = False
+        self.block_was_dropped = False
 
     def receive(self, fromx, tox, message, failure):
         """ Handles incoming messages. """
@@ -37,10 +38,20 @@ class FHSNode(Node):
 
         # drop message
         if message.is_to_drop(fromx, tox, failure):
-            # if self.name == fromx.name or self.name == tox.name:
-            #     # logging.info(f'drop message {message} from {fromx.name} to {tox.name} in round {message.round}.')
-            #     self.log(f'drop message {message} from {fromx.name} to {tox.name} in round {message.round}.')
-            return -1
+            #  TODO: check if block was dropped. If true, send new view.
+            #  self.name == tox.name
+            #  is block
+            if current_round % 2 == 1 and self.name == tox.name:
+                self.round += 1
+                new_view = NewView(self.highest_qc, self.round, self.name)
+                new_view.round = self.round
+                temp_leader_state = NodeState(self.round - 1, self.name, self.highest_qc,
+                                              self.highest_qc_round, self.last_voted_round, self.preferred_round,
+                                              self.storage.committed, self.storage.votes, new_view)
+                self.network.node_states.node_state_dict.update({self.name: temp_leader_state})
+                return -1
+            else:
+                return -1
 
         if not (isinstance(message, Message) and message.verify(self.network)):
             # assert False  # pragma: no cover
@@ -63,6 +74,9 @@ class FHSNode(Node):
                 # do not broadcast
                 # self.network.broadcast(self, block)
                 # do save node state as a leader
+
+                # has >=3 votes for the first time
+                # when 4 votes, do nothing
                 if self.has_message_to_send_flag is not True:
                     # first block to send
                     self.has_message_to_send_flag = True
@@ -70,6 +84,8 @@ class FHSNode(Node):
                                                   self.highest_qc_round, self.last_voted_round, self.preferred_round,
                                                   self.storage.committed, self.storage.votes, block)
                     self.network.node_states.node_state_dict.update({self.name: temp_leader_state})
+
+            # has 1 or 2 vote
             elif self.has_message_to_send_flag is False:
                 temp_leader_state = NodeState(self.round, self.name, self.highest_qc,
                                               self.highest_qc_round, self.last_voted_round, self.preferred_round,
@@ -94,14 +110,10 @@ class FHSNode(Node):
             vote = Vote(block.digest(), self.name)
             vote.round = block.round + 1
             self.has_message_to_send_flag = True
-            temp_follower_state = NodeState(self.round, self.name, self.highest_qc,
+            #  self.round - 1 means the state was collected at the end of last round
+            temp_follower_state = NodeState(self.round - 1, self.name, self.highest_qc,
                                             self.highest_qc_round, self.last_voted_round, self.preferred_round,
                                             self.storage.committed, self.storage.votes, vote)
-            self.network.node_states.node_state_dict.update({self.name: temp_follower_state})
-        elif self.has_message_to_send_flag is False:
-            temp_follower_state = NodeState(self.round, self.name, self.highest_qc,
-                                            self.highest_qc_round, self.last_voted_round, self.preferred_round,
-                                            self.storage.committed, self.storage.votes, None)
             self.network.node_states.node_state_dict.update({self.name: temp_follower_state})
 
     def _process_qc(self, qc):
@@ -145,6 +157,7 @@ class FHSNode(Node):
         elif self.is_leader() and current_round % 2 == 1 and self.message_to_send is not None:
             block = self.message_to_send
             self.network.broadcast(self, block)
+            #  TODO: if None, 4 new view
         elif current_round % 2 == 0 and self.message_to_send is not None:
             # follower send vote
             vote = self.message_to_send

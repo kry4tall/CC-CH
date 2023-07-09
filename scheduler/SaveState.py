@@ -141,31 +141,12 @@ class PhaseState:
 
     def to_string(self) -> str:
         result = 'Node States: \n'
-        if self.node_state_dict.get(0) is None:
-            result += 'None,\n'
-        else:
-            result += self.node_state_dict.get(0).to_string()
-            result += ',\n'
-        if self.node_state_dict.get(1) is None:
-            result += 'None,\n'
-        else:
-            result += self.node_state_dict.get(1).to_string()
-            result += ',\n'
-        if self.node_state_dict.get(2) is None:
-            result += 'None,\n'
-        else:
-            result += self.node_state_dict.get(2).to_string()
-            result += ',\n'
-        if self.node_state_dict.get(3) is None:
-            result += 'None,\n'
-        else:
-            result += self.node_state_dict.get(3).to_string()
-            result += ',\n'
-        if self.node_state_dict.get(4) is None:
-            result += 'None,\n'
-        else:
-            result += self.node_state_dict.get(4).to_string()
-            result += '.\n'
+        for i in range(4):
+            if self.node_state_dict.get(i) is None:
+                result += 'None,\n'
+            else:
+                result += self.node_state_dict.get(0).to_string()
+                result += ',\n'
         result += 'Sync_storage: \n'
         if self.sync_storage is None:
             result += 'None'

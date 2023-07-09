@@ -2,20 +2,21 @@ import math
 
 
 class NodeFailureSettings:
-    def __init__(self, num_of_processes, num_of_leaders, current_round):
+    def __init__(self, num_of_processes, num_of_leaders, current_round, leader_name):
         self.current_round = current_round
         self.num_of_processes = num_of_processes
-        self.num_of_leaders = num_of_leaders  # 2
+        self.num_of_leaders = num_of_leaders
         self.bin_num_len = num_of_leaders * num_of_processes
         """ 最多生成depth个failure """
         self.depth = int(math.pow(2, self.bin_num_len))
-        self.failures = self.get_failures()
+        self.failures = self.get_failures(leader_name)
         # self.failures = self.get_failures_of_twins()
 
     def get_random_failures(self):
         pass
 
-    def get_failures(self):
+    def get_failures(self, leader_name):
+        #  TODO: fix
         failures = []
         for failure_num in range(self.depth):
             failure = []
@@ -23,21 +24,17 @@ class NodeFailureSettings:
             for j in range(self.bin_num_len - len(bin_num)):
                 bin_num = '0' + bin_num
             for i in range(self.bin_num_len):
-                flag = bin_num[i]
-                if flag == '1':
+                current_bit = bin_num[i]
+                if current_bit == '1':
                     if self.current_round % 2 == 1:
-                        # send round
-                        sender = int(i / self.num_of_processes)
-                        if sender > 0:
-                            sender = 4
+                        # block round
+                        sender = leader_name
                         failure.append(
                             NodeFailure(sender,
                                         i % self.num_of_processes))
                     else:
                         # vote round
-                        receiver = int(i / self.num_of_processes)
-                        if receiver > 0:
-                            receiver = 4
+                        receiver = leader_name
                         failure.append(
                             NodeFailure(i % self.num_of_processes,
                                         receiver))

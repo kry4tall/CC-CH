@@ -75,6 +75,14 @@ class TwinsRunner:
         [network.add_node(n) for n in nodes]
         return network
 
+    def get_leader(self, current_round):
+        only_one_leader_path = self.scenarios[0]
+        round_leaders = only_one_leader_path['round_leaders']
+        if str(current_round) in round_leaders:
+            return round_leaders[str(current_round)]
+        else:
+            assert False
+
     def run_(self):
         self.init_queue()
         cnt = 0
@@ -87,11 +95,11 @@ class TwinsRunner:
                 parent_count = 1
             else:
                 parent_count = self.list_of_dict_key_and_path_count[current_round - 4].get(phase_state_key)
-            node_failure_setting = NodeFailureSettings(self.num_of_nodes + self.num_of_twins, 2, current_round)
+            current_round_leader = self.get_leader(current_round)
+            node_failure_setting = NodeFailureSettings(self.num_of_nodes + self.num_of_twins, 1 + self.num_of_twins,
+                                                       current_round, current_round_leader)
             self.failures = node_failure_setting.failures
             for i, failure in enumerate(self.failures):
-                if i > 0:
-                    break
                 network = self._init_network()
                 self.set_network_by_phase_state(network, phase_state, current_round)
                 network.failure = failure
@@ -232,7 +240,7 @@ class TwinsRunner:
     def set_node_state(self, node, node_state):
         # follower may not save state when it's a vote round
         # A vote round change leader's state
-        node.round = node_state.round
+        node.round = node_state.round + 1
         node.highest_qc = node_state.highest_qc
         node.highest_qc_round = node_state.highest_qc_round
         node.last_voted_round = node_state.last_voted_round
