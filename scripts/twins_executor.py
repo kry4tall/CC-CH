@@ -86,7 +86,7 @@ class TwinsRunner:
     def run_(self):
         self.init_queue()
         cnt = 0
-        flag_x = False
+        flag_x = True
         while len(self.state_queue) != 0:
             phase_state = self.state_queue.popleft()
             phase_state_key = phase_state.to_key()
@@ -105,6 +105,9 @@ class TwinsRunner:
                 network.failure = failure
                 network.env = simpy.Environment()
                 network.run(150, current_round)
+
+                if i != 1:
+                    continue
 
                 # duplicate but necessary step
                 self.fix_none_state(network)
