@@ -136,6 +136,8 @@ class FHSNode(Node):
         # while isinstance(temp.qc, QC):
         #     self.storage.commit(temp)
         #     temp = temp.qc.block(self.sync_storage)
+        if self.round == 9:
+            print()
         self.storage.commit(b0)
         self.log(f'Committing {b0}', color=BColors.OK)
 

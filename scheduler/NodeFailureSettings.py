@@ -9,8 +9,8 @@ class NodeFailureSettings:
         self.bin_num_len = num_of_leaders * num_of_processes
         """ 最多生成depth个failure """
         self.depth = int(math.pow(2, self.bin_num_len))
-        self.failures = self.get_failures(leader_name)
-        # self.failures = self.get_failures_of_twins()
+        # self.failures = self.get_failures(leader_name)
+        self.failures = self.get_failures_for_reproduce()
 
     def get_random_failures(self):
         pass
@@ -42,53 +42,42 @@ class NodeFailureSettings:
 
         return failures
 
-    def get_failures_of_twins(self):
+    def get_failures_for_reproduce(self):
         failures = []
-        
-        # round 3
-        failure = []
-        failure.append(NodeFailure(4, 0))
-        failure.append(NodeFailure(4, 1))
-        failure.append(NodeFailure(0, 2))
-        failure.append(NodeFailure(0, 3))
-        failure.append(NodeFailure(0, 4))
-        failures.append(failure)
 
-        # round 4
-        failure = []
-        failure.append(NodeFailure(0, 4))
-        failure.append(NodeFailure(1, 4))
-        failure.append(NodeFailure(2, 0))
-        failure.append(NodeFailure(3, 0))
-        failure.append(NodeFailure(4, 0))
-        failures.append(failure)
-
-        # round 5
-        failure = []
-        failure.append(NodeFailure(4, 0))
-        failure.append(NodeFailure(4, 1))
-        failure.append(NodeFailure(4, 2))
-        failure.append(NodeFailure(0, 3))
-        failure.append(NodeFailure(0, 4))
-        failures.append(failure)
-
-        # round 6
-        failure = []
-        failure.append(NodeFailure(0, 4))
-        failure.append(NodeFailure(1, 4))
-        failure.append(NodeFailure(2, 4))
-        failure.append(NodeFailure(3, 0))
-        failure.append(NodeFailure(4, 0))
-        failures.append(failure)
-
-        # round 7
-        failure = []
-        failure.append(NodeFailure(4, 0))
-        failure.append(NodeFailure(4, 1))
-        failure.append(NodeFailure(0, 2))
-        failure.append(NodeFailure(0, 3))
-        failure.append(NodeFailure(0, 4))
-        failures.append(failure)
+        # round 7-10
+        if 7 <= self.current_round <= 10:
+            failure = []
+            failure.append(NodeFailure(1, 0))
+            failure.append(NodeFailure(1, 2))
+            failure.append(NodeFailure(1, 3))
+            failure.append(NodeFailure(0, 1))
+            failure.append(NodeFailure(2, 1))
+            failure.append(NodeFailure(3, 1))
+            failures.append(failure)
+            return failures
+        elif 11 <= self.current_round <= 14:
+            failure = []
+            failure.append(NodeFailure(2, 0))
+            failure.append(NodeFailure(2, 1))
+            failure.append(NodeFailure(2, 3))
+            failure.append(NodeFailure(0, 2))
+            failure.append(NodeFailure(1, 2))
+            failure.append(NodeFailure(3, 2))
+            failures.append(failure)
+        elif 15 <= self.current_round <= 19:
+            failure = []
+            failure.append(NodeFailure(1, 0))
+            failure.append(NodeFailure(1, 2))
+            failure.append(NodeFailure(1, 3))
+            failure.append(NodeFailure(0, 1))
+            failure.append(NodeFailure(2, 1))
+            failure.append(NodeFailure(3, 1))
+            failures.append(failure)
+        else:
+            failure = []
+            failures.append(failure)
+            return failures
 
         return failures
 

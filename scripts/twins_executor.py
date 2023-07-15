@@ -106,9 +106,6 @@ class TwinsRunner:
                 network.env = simpy.Environment()
                 network.run(150, current_round)
 
-                if i != 1:
-                    continue
-
                 # duplicate but necessary step
                 self.fix_none_state(network)
                 new_phase_state = deepcopy(network.node_states)
@@ -156,7 +153,6 @@ class TwinsRunner:
                     if self.failed_times <= 99:
                         self._print_log(file_path, new_phase_state)
                         self.failed_times += 1
-                    assert False
                 for n in network.nodes.values():
                     n.log.__init__()
                 network.node_states = PhaseState()
