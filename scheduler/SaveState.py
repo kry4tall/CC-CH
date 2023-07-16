@@ -211,7 +211,7 @@ class NodeState:
         result += f', highest_qc_round:{self.highest_qc_round}'
         result += f', last_voted_round:{self.last_voted_round}'
         result += f', preferred_round:{self.preferred_round}'
-        result += f', committed:{sorted(self.committed, key=lambda x: x.for_key())}'
+        result += f', committed:{sorted(self.committed, key=lambda x: x.for_sort())}'
         if self.message_to_send is None:
             result += f', message_to_send:None'
         else:
@@ -233,7 +233,7 @@ class NodeState:
         result += f',{self.highest_qc_round}'
         result += f',{self.last_voted_round}'
         result += f',{self.preferred_round}'
-        committed = sorted(self.committed, key=lambda x: x.for_key())
+        committed = sorted(self.committed, key=lambda x: x.for_sort())
         keys = [i.for_key() for i in committed]
         result += f',{keys}'
         if self.message_to_send is None:

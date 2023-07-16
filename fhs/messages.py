@@ -28,6 +28,9 @@ class Block(Message):
     def digest(self):
         return f'{self.author}||{self.round}'
 
+    def for_sort(self):
+        return f'{self.round},{self.author},{self.qc}'
+
     def __eq__(self, other):
         if self.for_key() == other.for_key():
             return True
@@ -69,6 +72,9 @@ class Vote(GenericVote):
         else:
             return False
 
+    def for_sort(self):
+        return f'{self.author},{self.block_hash}'
+
     def for_key(self):
         return f'{self.author},{self.block_hash}'
 
@@ -100,6 +106,9 @@ class NewView(GenericVote):
 
     def __hash__(self):
         return self.for_key().__hash__()
+
+    def for_sort(self):
+        return f'{self.author},{self.round},{self.qc.for_key()}'
 
     def for_key(self):
         return f'{self.author},{self.round},{self.qc.for_key()}'
