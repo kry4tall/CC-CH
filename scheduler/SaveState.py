@@ -163,31 +163,12 @@ class PhaseState:
 
     def to_key(self) -> str:
         result = ''
-        if self.node_state_dict.get(0) is None:
-            result += 'None'
-        else:
-            result += self.node_state_dict.get(0).to_key()
-        if self.node_state_dict.get(1) is None:
-            result += ',None'
-        else:
-            result += ','
-            result += self.node_state_dict.get(1).to_key()
-        if self.node_state_dict.get(2) is None:
-            result += ',None'
-        else:
-            result += ','
-            result += self.node_state_dict.get(2).to_key()
-        if self.node_state_dict.get(3) is None:
-            result += ',None'
-        else:
-            result += ','
-            result += self.node_state_dict.get(3).to_key()
-        if self.node_state_dict.get(4) is None:
-            result += ',None'
-        else:
-            result += ','
-            result += self.node_state_dict.get(4).to_key()
-        result += ','
+        for i in range(4):
+            if self.node_state_dict.get(i) is None:
+                result += 'None,'
+            else:
+                result += self.node_state_dict.get(i).to_key()
+                result += ','
         if self.sync_storage is None:
             result += 'None.'
         else:

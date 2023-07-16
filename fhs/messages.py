@@ -23,16 +23,13 @@ class Block(Message):
         return f'BK(Node{self.author}, {self.round}, {self.qc}, {data})'
 
     def for_key(self):
-        data = self.payload[0]
-        return f'{self.author},{self.round},{self.qc},{data}'
+        return f'{self.author},{self.round},{self.qc}'
 
     def digest(self):
         return f'{self.author}||{self.round}'
 
     def __eq__(self, other):
-        if self.qc == other.qc \
-                and self.round == other.round \
-                and self.author == other.author:
+        if self.for_key() == other.for_key():
             return True
         else:
             return False
@@ -67,7 +64,7 @@ class Vote(GenericVote):
         return f'V(Node{self.author}, {self.block_hash})'
 
     def __eq__(self, other):
-        if self.block_hash == other.block_hash and self.author == other.author:
+        if self.for_key() == other.for_key():
             return True
         else:
             return False
@@ -96,7 +93,7 @@ class NewView(GenericVote):
         return f'NV(Node{self.author}, {self.round}, {self.qc})'
 
     def __eq__(self, other):
-        if self.qc == other.qc and self.round == other.round and self.author == other.author:
+        if self.for_key() == other.for_key():
             return True
         else:
             return False
@@ -141,7 +138,7 @@ class QC(GenericQC):
         return f'{next(iter(self.votes)).block_hash}'
 
     def __eq__(self, other):
-        if self.votes == other.votes:
+        if self.for_key() == other.for_key():
             return True
         else:
             return False
