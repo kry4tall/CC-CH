@@ -326,7 +326,7 @@ class TwinsRunner:
             if len(i_node_committed) == 0:
                 continue
 
-            i_node_committed_list = list(sorted(i_node_committed, key=lambda x: x.for_sort()))
+            i_node_committed_list = list(sorted(i_node_committed, key=lambda x: x.for_key()))
             if longest is None:
                 longest = i_node_committed_list
                 continue
@@ -349,7 +349,7 @@ class TwinsRunner:
             if i == 4:
                 break
             committed_blocks = network.nodes[i].storage.committed
-            committed_list = list(sorted(committed_blocks, key=lambda x: x.for_sort()))
+            committed_list = list(sorted(committed_blocks, key=lambda x: x.for_key()))
             # print(committed_list[0])
             if longest is None:
                 longest = committed_list

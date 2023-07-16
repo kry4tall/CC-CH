@@ -46,7 +46,7 @@ class NodeStorage():
             f'NodeStorage content ({self.node} at round {self.node.round}):\n'
             f'\tVotes({len(self.votes)}): {self.votes}\n'
             f'\tNewViews({len(self.new_views)}): {self.new_views}\n'
-            f'\tCommitted({len(self.committed)}): {sorted(self.committed, key=lambda x: x.for_sort())}'
+            f'\tCommitted({len(self.committed)}): {sorted(self.committed, key=lambda x: x.for_key())}'
         )
 
     def add_vote(self, message):
@@ -68,7 +68,7 @@ class NodeStorage():
         # TODO: Should we also commit all ancestors?
         self.committed.add(block)
         # block_str = f'{block}'
-        # committed_str = f'{sorted(self.committed, key=lambda x: x.for_sort())}'
+        # committed_str = f'{sorted(self.committed, key=lambda x: x.for_key())}'
         # if block_str not in committed_str:
         #     self.committed.add(block)
 
