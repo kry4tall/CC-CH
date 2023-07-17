@@ -5,7 +5,7 @@ from copy import deepcopy
 from scheduler.SaveState import *
 from sim.node import Node
 from sim.network import BColors, Network
-from fhs.messages import Message, Block, GenericVote, Vote, NewView, QC
+from fhs.messages import Message, Block, GenericVote, Vote, NewView, QC, AggQC
 from fhs.storage import NodeStorage, SyncStorage
 import logging
 
@@ -37,7 +37,6 @@ class FHSNode(Node):
 
         # drop message
         if len(failure) > 0 and message.is_to_drop(fromx, tox, failure):
-            #  TODO: check if block was dropped. If true, send new view.
             #  self.name == tox.name
             #  is block
             if current_round % 2 == 1 and self.name == tox.name:
@@ -58,8 +57,6 @@ class FHSNode(Node):
 
         # Handle incoming blocks.
         if isinstance(message, Block):
-            # if self.round == 3:
-            #     message = message.qc.block(self.sync_storage)
             self.sync_storage.add_block(message)
             self._process_qc(message.qc)
             self._process_block(message)
@@ -132,13 +129,15 @@ class FHSNode(Node):
             self.highest_qc_round = b1.round
 
         # Update the committed sequence.
-        # temp = b0
-        # while isinstance(temp.qc, QC):
-        #     self.storage.commit(temp)
-        #     temp = temp.qc.block(self.sync_storage)
-        if self.round == 9:
-            print()
-        self.storage.commit(b0)
+        # original code
+        # self.storage.commit(b0)
+
+        # modified code: commit ancestors
+        temp = b0
+        while not isinstance(temp.qc, str):
+            self.storage.commit(temp)
+            temp = temp.qc.block(self.sync_storage)
+
         self.log(f'Committing {b0}', color=BColors.OK)
 
     def is_leader(self):
@@ -150,7 +149,6 @@ class FHSNode(Node):
 
     def send(self, current_round):
         """ Main loop triggering timeouts. """
-        # TODO: message to send is None means need to send new view!
 
         if self.is_leader() and current_round == 3:
             block = Block(self.highest_qc, self.round, self.name)
@@ -158,7 +156,6 @@ class FHSNode(Node):
         elif self.is_leader() and current_round % 2 == 1 and self.message_to_send is not None:
             block = self.message_to_send
             self.network.broadcast(self, block)
-            #  TODO: if None, 4 new view
         elif current_round % 2 == 0 and self.message_to_send is not None:
             # follower send vote
             vote = self.message_to_send

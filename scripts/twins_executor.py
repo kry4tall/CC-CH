@@ -1,6 +1,4 @@
-import json
 import sys
-import time
 from copy import deepcopy
 
 sys.path.append('E:\\bft_testing\\Test_twins_with_oopsla\\scheduler')
@@ -15,12 +13,9 @@ from fhs.node import FHSNode
 from twins.twins import TwinsNetwork, TwinsLE
 from sim.network import SyncModel
 from scheduler.NodeFailureSettings import NodeFailureSettings
-from scheduler.NodeFailureSettings import NodeFailure
 from strategy.PrioritySorting import PrioritySorting
 from strategy.RoundSorting import RoundSorting
 from collections import deque
-import datetime
-from streamlet.node import StreamletNode
 
 
 class TwinsRunner:
@@ -36,7 +31,6 @@ class TwinsRunner:
         self.fail_states_dict_set = dict()
         self.top = None
 
-        # XYY
         self.list_of_dict_key_and_path_count = []
 
         with open(file_path) as f:
@@ -53,6 +47,8 @@ class TwinsRunner:
         self.failures = None
         self.failed_times = 0
         self.run_times_before_add_queue = 1
+        self.typical_failure_path = dict()
+        self.failure_state_path_count = dict()
         logging.debug(f'Scenario file {args.path} successfully loaded.')
         logging.info(
             f'Settings: {self.num_of_nodes} nodes, {self.num_of_twins} twins.'
@@ -85,8 +81,7 @@ class TwinsRunner:
 
     def run_(self):
         self.init_queue()
-        cnt = 0
-        flag_x = True
+        flag_x = False
         while len(self.state_queue) != 0:
             phase_state = self.state_queue.popleft()
             phase_state_key = phase_state.to_key()
@@ -100,6 +95,11 @@ class TwinsRunner:
                                                        current_round, current_round_leader)
             self.failures = node_failure_setting.failures
             for i, failure in enumerate(self.failures):
+                # a = True
+                # if current_round == 3 and i == 1 or current_round == 4 and i == 0 or current_round == 5 and i == 0:
+                #     a = False
+                # if a:
+                #     continue
                 network = self._init_network()
                 self.set_network_by_phase_state(network, phase_state, current_round)
                 network.failure = failure
@@ -111,8 +111,14 @@ class TwinsRunner:
                 new_phase_state = deepcopy(network.node_states)
                 new_phase_state.sync_storage = deepcopy(next(iter(network.nodes.values())).sync_storage)
                 new_phase_state.round = current_round
+                new_phase_state.path = deepcopy(phase_state.path)
+                new_phase_state.path.append(i)
 
                 self.count_merged_paths(current_round, parent_count, phase_state_key, new_phase_state)
+                add = self.list_of_dict_key_and_path_count[current_round - 3][new_phase_state.to_key()]
+                # update count of failure state
+                if new_phase_state.to_key() in self.fail_states_dict_set.keys():
+                    self.failure_state_path_count.setdefault(new_phase_state.to_key(), add)
 
                 # It is different between round of sending block and round of sending vote.
                 #  TODO: modify sorting method
@@ -127,7 +133,7 @@ class TwinsRunner:
                 # store failure states
                 if self.duplicate_checking(self.list_of_states_dict_for_print[current_round - 3],
                                            new_phase_state) is False:
-                    if self.states_safety_check(new_phase_state) is True:
+                    if self.is_safe(new_phase_state) is True:
                         self.list_of_states_dict_for_print[current_round - 3].setdefault(new_phase_state.to_key(),
                                                                                          new_phase_state)
                         if current_round != self.num_of_rounds:
@@ -135,29 +141,26 @@ class TwinsRunner:
                             self.temp_list[current_round - 3] += 1
                     else:
                         self.fail_states_dict_set.setdefault(new_phase_state.to_key(), new_phase_state)
-
-                        nnn_num = self.list_of_dict_key_and_path_count[current_round - 3].get(new_phase_state.to_key())
-
-                        # TODO: print to log
-                        print("Find bug which can be reproduced from " + str(nnn_num) + " bug path!")
-                        cnt += nnn_num
+                        self.typical_failure_path.setdefault(new_phase_state.to_key(), new_phase_state.path)
+                        source_path_count = self.list_of_dict_key_and_path_count[current_round - 3].get(new_phase_state.to_key())
+                        self.failure_state_path_count.setdefault(new_phase_state.to_key(), source_path_count)
 
                         # bug state 不会作为 parent state
+                        # bug state update count
                         self.list_of_dict_key_and_path_count[current_round - 3][new_phase_state.to_key()] = 0
 
                 if flag_x is True:
                     file_path = join(self.log_path, f'phase-state-log-{current_round}-failure-{i}.log')
                     self._print_log(file_path, new_phase_state)
-                if self.log_path is not None and self.states_safety_check(new_phase_state) is False:
-                    file_path = join(self.log_path, f'failure-violating-{self.failed_times}.log')
-                    if self.failed_times <= 99:
-                        self._print_log(file_path, new_phase_state)
-                        self.failed_times += 1
+                # if self.log_path is not None and self.is_safe(new_phase_state) is False:
+                #     file_path = join(self.log_path, f'failure-violating-{self.failed_times}.log')
+                #     if self.failed_times <= 99:
+                #         self._print_log(file_path, new_phase_state)
+                #         self.failed_times += 1
                 for n in network.nodes.values():
                     n.log.__init__()
                 network.node_states = PhaseState()
                 network.trace = []
-                print("Finish failure " + str(i))
             print("##### Log #### Finish phase. Current state's round: " + str(current_round) +
                   ". Current queue size: " + len(self.state_queue).__str__() + ".")
 
@@ -171,7 +174,18 @@ class TwinsRunner:
                 for key in target_dict.keys():
                     sum_x += target_dict[key]
                 self.add_state_queue()
-        self.fail_states_dict_set = dict()
+        print("Finished")
+        final_result_file_path = join(self.log_path, f'final_result.log')
+        self._print_final_result(final_result_file_path)
+
+    def _print_final_result(self, final_result_file_path):
+        result = []
+        for key in self.failure_state_path_count.keys():
+            path_count = self.failure_state_path_count.get(key)
+            typical_path = self.typical_failure_path.get(key)
+            result += [f'Bug state: {key} Path count: {path_count}. Typical path: {typical_path}.\n']
+        with open(final_result_file_path, 'w') as f:
+            f.write(''.join(result))
 
     def add_state_queue(self):
         # sort
@@ -221,8 +235,6 @@ class TwinsRunner:
 
     def init_queue(self):
         ps = PhaseState()
-        # XYY
-        ps.merge_path_num = 1
         ps.round = 2
         self.state_queue.append(ps)
 
@@ -293,31 +305,12 @@ class TwinsRunner:
     def _print_log(self, file_path, state):
         data = [f'Settings: {self.num_of_nodes} nodes, {self.num_of_twins} ']
         data += [f'twins, and {self.num_of_rounds} rounds.\n']
-
-        # data += ['\n\nfailures:\n[']
-        # failures = ''
-        # for i, fai in enumerate(network.failure):
-        #     if isinstance(fai, NodeFailure):
-        #         failures += fai.__str__()
-        #         if i != len(network.failure) - 1:
-        #             failures += ','
-        # data += [failures]
-        # if failures == '':
-        #     logging.info(f'Failures: None')
-        # else:
-        #     logging.info(f'Failures: {failures}')
-
-        # data += [']\n']
-
-        # data += ['\n\nNetwork logs:\n']
-        # data += [f'{t}\n' for t in network.trace] + ['\n']
-
         data += [state.to_string()]
 
         with open(file_path, 'w') as f:
             f.write(''.join(data))
 
-    def states_safety_check(self, new_phase_state):
+    def is_safe(self, new_phase_state):
         longest = None
         dic = new_phase_state.node_state_dict
 
@@ -339,27 +332,6 @@ class TwinsRunner:
                         return False
             if len(longest) < len(i_node_committed_list):
                 longest = i_node_committed_list
-        return True
-
-    def check_safety(self, network):
-        longest = None
-        for i in network.nodes:
-            if i == 0:
-                continue
-            if i == 4:
-                break
-            committed_blocks = network.nodes[i].storage.committed
-            committed_list = list(sorted(committed_blocks, key=lambda x: x.for_sort()))
-            # print(committed_list[0])
-            if longest is None:
-                longest = committed_list
-                continue
-            for i in range(min(len(longest), len(committed_list))):
-                if longest[i].round == committed_list[i].round:
-                    if str(longest[i]) != str(committed_list[i]):
-                        return False
-            if len(longest) < len(committed_list):
-                longest = committed_list
         return True
 
     def count_merged_paths(self, current_round, parent_count, parent_phase_state, new_phase_state):

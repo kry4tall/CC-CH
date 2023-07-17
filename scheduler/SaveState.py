@@ -11,7 +11,8 @@ class PhaseState:
         self.if_bk_same = 1
         self.chaos = 0
         self.msg_chaos = 0
-        self.quorum = 2
+        self.quorum = 2  # TODO
+        self.path = []
 
     def set_votes_abs(self):
         self.set_chaos()
