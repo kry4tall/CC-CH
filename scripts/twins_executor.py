@@ -110,6 +110,7 @@ class TwinsRunner:
                 self.fix_none_state(network)
                 new_phase_state = deepcopy(network.node_states)
                 new_phase_state.sync_storage = deepcopy(next(iter(network.nodes.values())).sync_storage)
+                del network
                 new_phase_state.round = current_round
                 new_phase_state.path = deepcopy(phase_state.path)
                 new_phase_state.path.append(i)
@@ -157,10 +158,6 @@ class TwinsRunner:
                 #     if self.failed_times <= 99:
                 #         self._print_log(file_path, new_phase_state)
                 #         self.failed_times += 1
-                for n in network.nodes.values():
-                    n.log.__init__()
-                network.node_states = PhaseState()
-                network.trace = []
             print("##### Log #### Finish phase. Current state's round: " + str(current_round) +
                   ". Current queue size: " + len(self.state_queue).__str__() + ".")
 
@@ -174,9 +171,17 @@ class TwinsRunner:
                 for key in target_dict.keys():
                     sum_x += target_dict[key]
                 self.add_state_queue()
+                self._print_state_queue_size(current_round)
         print("Finished")
         final_result_file_path = join(self.log_path, f'final_result.log')
         self._print_final_result(final_result_file_path)
+
+    def _print_state_queue_size(self, current_round):
+        queue_size_file_path = join(self.log_path, f'queue_size.log')
+        result = []
+        result += [f'Round: {current_round}. Queue size: {len(self.state_queue)}.\n']
+        with open(queue_size_file_path, 'a') as f:
+            f.write(''.join(result))
 
     def _print_final_result(self, final_result_file_path):
         result = []
