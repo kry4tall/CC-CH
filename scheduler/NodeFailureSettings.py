@@ -6,7 +6,7 @@ class NodeFailureSettings:
         self.current_round = current_round
         self.num_of_processes = num_of_processes
         self.num_of_leaders = num_of_leaders
-        self.bin_num_len = num_of_leaders * num_of_processes
+        self.bin_num_len = num_of_leaders * (num_of_processes - 1)
         """ 最多生成depth个failure """
         self.depth = int(math.pow(2, self.bin_num_len))
         self.failures = self.get_failures(leader_name)
