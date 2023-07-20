@@ -3,7 +3,7 @@ import math
 
 
 class PhaseState:
-    def __init__(self, failure=None):
+    def __init__(self):
         self.round = None
         self.node_state_dict = dict()
         self.sync_storage = None
@@ -13,7 +13,6 @@ class PhaseState:
         self.msg_chaos = 0
         self.quorum = 2  # TODO
         self.path = []
-        self.failure = failure
 
     def set_votes_abs(self):
         self.set_chaos()
