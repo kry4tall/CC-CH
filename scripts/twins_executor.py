@@ -42,7 +42,8 @@ class TwinsRunner:
         # how many rounds in one phase
         self.num_of_rounds = num_of_rounds
         self.num_of_rounds_need_to_add_queue = num_of_rounds - 3
-        self.temp_list = [0 for i in range(self.num_of_rounds_need_to_add_queue)]  # store num of different round in temp_dict
+        self.temp_list = [0 for i in range(self.num_of_rounds_need_to_add_queue + 1)]  # store num of different round in temp_dict
+        self.temp_unsafe_list = [0 for i in range(self.num_of_rounds_need_to_add_queue + 1)]
         self.seed = None
         self.failures = None
         self.failed_times = 0
@@ -137,15 +138,15 @@ class TwinsRunner:
                     if self.is_safe(new_phase_state) is True:
                         self.list_of_states_dict_for_print[current_round - 3].setdefault(new_phase_state.to_key(),
                                                                                          new_phase_state)
-                        if current_round != self.num_of_rounds:
-                            self.temp_dict.setdefault(new_phase_state.to_key(), new_phase_state)
-                            self.temp_list[current_round - 3] += 1
+                        self.temp_dict.setdefault(new_phase_state.to_key(), new_phase_state)
+                        self.temp_list[current_round - 3] += 1
                     else:
                         self.fail_states_dict_set.setdefault(new_phase_state.to_key(), new_phase_state)
                         self.typical_failure_path.setdefault(new_phase_state.to_key(), new_phase_state.path)
                         source_path_count = self.list_of_dict_key_and_path_count[current_round - 3].get(new_phase_state.to_key())
                         self.failure_state_path_count.setdefault(new_phase_state.to_key(), source_path_count)
 
+                        self.temp_unsafe_list[current_round - 3] += 1
                         # bug state 不会作为 parent state
                         # bug state update count
                         self.list_of_dict_key_and_path_count[current_round - 3][new_phase_state.to_key()] = 0
@@ -166,20 +167,19 @@ class TwinsRunner:
             # 下一次调用add_state_queue前执行top次循环,处理掉top个最优先的state
             self.run_times_before_add_queue -= 1
             if self.run_times_before_add_queue == 0 or len(self.state_queue) == 0:
-                sum_x = 0
-                target_dict = self.list_of_dict_key_and_path_count[current_round - 3]
-                for key in target_dict.keys():
-                    sum_x += target_dict[key]
-                self.add_state_queue()
-                self._print_state_queue_size(current_round)
+                self._print_states_count(current_round)
+                if current_round != self.num_of_rounds:
+                    self.add_state_queue()
+                # self.sort_and_add_state_queue()
         print("Finished")
         final_result_file_path = join(self.log_path, f'final_result.log')
         self._print_final_result(final_result_file_path)
 
-    def _print_state_queue_size(self, current_round):
+    def _print_states_count(self, current_round):
         queue_size_file_path = join(self.log_path, f'queue_size.log')
         result = []
-        result += [f'Round: {current_round}. Queue size: {len(self.state_queue)}.\n']
+        result += [f'Round: {current_round}. Safe states count: {self.temp_list[current_round-3]}. '
+                   f'Unsafe states count: {self.temp_unsafe_list[current_round-3]}\n']
         with open(queue_size_file_path, 'a') as f:
             f.write(''.join(result))
 
@@ -193,12 +193,19 @@ class TwinsRunner:
             f.write(''.join(result))
 
     def add_state_queue(self):
+        rs = list(self.temp_dict.values())
+        self.state_queue.extend(rs)
+        self.temp_dict = dict()
+        self.run_times_before_add_queue = sys.maxsize
+
+    def sort_and_add_state_queue(self):
         # sort
         # extend
         rs = RoundSorting(self.temp_dict).sorted_state_list
         start = 0
         sorted_list = list()
         for i in range(self.num_of_rounds_need_to_add_queue):
+            # from the final round
             round_num = self.temp_list[self.num_of_rounds_need_to_add_queue - 1 - i]
             if round_num != 0:
                 li = rs[start:start + round_num]
@@ -210,6 +217,7 @@ class TwinsRunner:
         sorted_list.reverse()
         self.state_queue.extendleft(sorted_list)
         # self.run_times_before_add_queue = self.top
+
         # no top
         self.run_times_before_add_queue = sys.maxsize
 

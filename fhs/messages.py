@@ -175,10 +175,12 @@ class AggQC(GenericQC):
         return blocks[rounds.index(max(rounds))]
 
     def __repr__(self):
-        return f'AggQC({[x.qc for x in self.new_views]})'
+        qcs = [x.qc for x in self.new_views]
+        return f'AggQC({sorted(qcs, key=lambda x: x.for_key())})'
 
     def for_key(self):
-        return f'AggQC({[x.qc for x in self.new_views]})'
+        qcs = [x.qc for x in self.new_views]
+        return f'AggQC({sorted(qcs, key=lambda x: x.for_key())})'
 
     def __eq__(self, other):
         if self.for_key() == other.for_key():
