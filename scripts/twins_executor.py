@@ -42,7 +42,8 @@ class TwinsRunner:
         # how many rounds in one phase
         self.num_of_rounds = num_of_rounds
         self.num_of_rounds_need_to_add_queue = num_of_rounds - 3
-        self.temp_list = [0 for i in range(self.num_of_rounds_need_to_add_queue + 1)]  # store num of different round in temp_dict
+        self.temp_list = [0 for i in
+                          range(self.num_of_rounds_need_to_add_queue + 1)]  # store num of different round in temp_dict
         self.temp_unsafe_list = [0 for i in range(self.num_of_rounds_need_to_add_queue + 1)]
         self.seed = None
         self.failures = None
@@ -134,7 +135,9 @@ class TwinsRunner:
                 # and
                 # store failure states
                 if self.duplicate_checking(self.list_of_states_dict_for_print[current_round - 3],
-                                           new_phase_state) is False:
+                                           new_phase_state) is False and self.duplicate_checking(
+                    self.fail_states_dict_set,
+                    new_phase_state) is False:
                     if self.is_safe(new_phase_state) is True:
                         self.list_of_states_dict_for_print[current_round - 3].setdefault(new_phase_state.to_key(),
                                                                                          new_phase_state)
@@ -143,7 +146,8 @@ class TwinsRunner:
                     else:
                         self.fail_states_dict_set.setdefault(new_phase_state.to_key(), new_phase_state)
                         self.typical_failure_path.setdefault(new_phase_state.to_key(), new_phase_state.path)
-                        source_path_count = self.list_of_dict_key_and_path_count[current_round - 3].get(new_phase_state.to_key())
+                        source_path_count = self.list_of_dict_key_and_path_count[current_round - 3].get(
+                            new_phase_state.to_key())
                         self.failure_state_path_count.setdefault(new_phase_state.to_key(), source_path_count)
 
                         self.temp_unsafe_list[current_round - 3] += 1
@@ -178,8 +182,8 @@ class TwinsRunner:
     def _print_states_count(self, current_round):
         queue_size_file_path = join(self.log_path, f'queue_size.log')
         result = []
-        result += [f'Round: {current_round}. Safe states count: {self.temp_list[current_round-3]}. '
-                   f'Unsafe states count: {self.temp_unsafe_list[current_round-3]}\n']
+        result += [f'Round: {current_round}. Safe states count: {self.temp_list[current_round - 3]}. '
+                   f'Unsafe states count: {self.temp_unsafe_list[current_round - 3]}\n']
         with open(queue_size_file_path, 'a') as f:
             f.write(''.join(result))
 
@@ -360,7 +364,8 @@ class TwinsRunner:
             else:
                 # parent state被统计过,则parent state出现时都可以获得当前new state
                 parent_count = self.list_of_dict_key_and_path_count[current_round - 4].get(parent_phase_state)
-                self.list_of_dict_key_and_path_count[current_round - 3].setdefault(new_phase_state.to_key(), parent_count)
+                self.list_of_dict_key_and_path_count[current_round - 3].setdefault(new_phase_state.to_key(),
+                                                                                   parent_count)
 
 
 if __name__ == '__main__':
