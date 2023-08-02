@@ -104,7 +104,10 @@ class TwinsRunner:
                 #     continue
                 network = self._init_network()
                 self.set_network_by_phase_state(network, phase_state, current_round)
-                network.failure = failure
+                if current_round % 2 == 0:
+                    network.failure = phase_state.failure
+                else:
+                    network.failure = failure
                 network.env = simpy.Environment()
                 network.run(150, current_round)
 
@@ -116,6 +119,7 @@ class TwinsRunner:
                 new_phase_state.round = current_round
                 new_phase_state.path = deepcopy(phase_state.path)
                 new_phase_state.path.append(i)
+                new_phase_state.failure = failure
 
                 self.count_merged_paths(current_round, parent_count, phase_state_key, new_phase_state)
                 add = self.list_of_dict_key_and_path_count[current_round - 3][new_phase_state.to_key()]
