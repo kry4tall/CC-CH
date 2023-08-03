@@ -29,7 +29,10 @@ class Block(Message):
         return f'{self.author}||{self.round}'
 
     def for_sort(self):
-        return f'{self.round},{self.author},{self.qc}'
+        if self.round < 10:
+            return f'0{self.round},{self.author},{self.qc}'
+        else:
+            return f'{self.round},{self.author},{self.qc}'
 
     def __eq__(self, other):
         if self.for_key() == other.for_key():

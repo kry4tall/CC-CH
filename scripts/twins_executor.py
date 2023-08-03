@@ -138,6 +138,8 @@ class TwinsRunner:
                 # and
                 # store failure states
                 if self.duplicate_checking(self.list_of_states_dict_for_print[current_round - 3],
+                                           new_phase_state) is False\
+                        and self.duplicate_checking(self.fail_states_dict_set,
                                            new_phase_state) is False:
                     if self.is_safe(new_phase_state) is True:
                         self.list_of_states_dict_for_print[current_round - 3].setdefault(new_phase_state.to_key(),
