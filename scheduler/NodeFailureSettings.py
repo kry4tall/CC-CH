@@ -10,7 +10,7 @@ class NodeFailureSettings:
         """ 最多生成depth个failure """
         self.depth = int(math.pow(2, self.bin_num_len))
         # self.failures = self.get_failures(leader_name)
-        self.failures = self.get_failures_for_reproduce()
+        self.failures = self.get_failures_for_reproduce1()
 
     def get_random_failures(self):
         pass
@@ -38,6 +38,53 @@ class NodeFailureSettings:
                             NodeFailure(i % self.num_of_processes,
                                         receiver))
             failures.append(failure)
+
+        return failures
+
+    def get_failures_for_reproduce1(self):
+        failures = []
+
+        # round 7-10
+        if 7 == self.current_round:
+            failure = []
+            failure.append(NodeFailure(1, 0))
+            failure.append(NodeFailure(1, 2))
+            failure.append(NodeFailure(1, 3))
+            failures.append(failure)
+            return failures
+        elif 9 == self.current_round:
+            failure = []
+            failure.append(NodeFailure(0, 1))
+            failures.append(failure)
+            return failures
+        elif 11 == self.current_round:
+            failure = []
+            failure.append(NodeFailure(2, 0))
+            failure.append(NodeFailure(2, 1))
+            failure.append(NodeFailure(2, 3))
+            failures.append(failure)
+        elif 13 == self.current_round:
+            failure = []
+            failure.append(NodeFailure(1, 2))
+            failures.append(failure)
+        elif 15 == self.current_round:
+            failure = []
+            failure.append(NodeFailure(1, 0))
+            failure.append(NodeFailure(1, 2))
+            failure.append(NodeFailure(1, 3))
+            failures.append(failure)
+        elif 17 == self.current_round:
+            failure = []
+            failure.append(NodeFailure(2, 1))
+            failures.append(failure)
+        elif 19 == self.current_round:
+            failure = []
+            failure.append(NodeFailure(2, 1))
+            failures.append(failure)
+        else:
+            failure = []
+            failures.append(failure)
+            return failures
 
         return failures
 

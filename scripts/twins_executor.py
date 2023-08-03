@@ -83,7 +83,7 @@ class TwinsRunner:
 
     def run_(self):
         self.init_queue()
-        flag_x = False
+        flag_x = True
         while len(self.state_queue) != 0:
             phase_state = self.state_queue.popleft()
             phase_state_key = phase_state.to_key()
