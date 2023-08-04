@@ -139,15 +139,9 @@ class TwinsRunner:
                 # and
                 # store failure states
                 if self.duplicate_checking(self.list_of_states_dict_for_print[current_round - 3],
-<<<<<<< HEAD
-                                           new_phase_state) is False\
+                                           new_phase_state) is False \
                         and self.duplicate_checking(self.fail_states_dict_set,
-                                           new_phase_state) is False:
-=======
-                                           new_phase_state) is False and self.duplicate_checking(
-                    self.fail_states_dict_set,
-                    new_phase_state) is False:
->>>>>>> 26b2ea5f40cda2f5a378d3c405bea12cd29ff401
+                                                    new_phase_state) is False:
                     if self.is_safe(new_phase_state) is True:
                         self.list_of_states_dict_for_print[current_round - 3].setdefault(new_phase_state.to_key(),
                                                                                          new_phase_state)
@@ -194,7 +188,7 @@ class TwinsRunner:
         result = []
         result += [f'Round: {current_round}. Safe states count: {self.temp_list[current_round - 3]}. '
                    f'Unsafe states count: {self.temp_unsafe_list[current_round - 3]}\n']
-        with open(queue_size_file_path, 'a') as f:
+        with open(queue_size_file_path, 'w') as f:
             f.write(''.join(result))
 
     def _print_final_result(self, final_result_file_path):

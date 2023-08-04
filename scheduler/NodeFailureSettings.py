@@ -9,8 +9,8 @@ class NodeFailureSettings:
         self.bin_num_len = num_of_leaders * (num_of_processes - 1)
         """ 最多生成depth个failure """
         self.depth = int(math.pow(2, self.bin_num_len))
-        # self.failures = self.get_failures(leader_name)
-        self.failures = self.get_failures_for_reproduce1()
+        self.failures = self.get_failures(leader_name)
+        # self.failures = self.get_failures_for_reproduce1()
 
     def get_random_failures(self):
         pass
@@ -46,40 +46,27 @@ class NodeFailureSettings:
 
         # round 7-10
         if 7 == self.current_round:
-            failure = []
-            failure.append(NodeFailure(1, 0))
-            failure.append(NodeFailure(1, 2))
-            failure.append(NodeFailure(1, 3))
+            failure = [NodeFailure(1, 0), NodeFailure(1, 2), NodeFailure(1, 3)]
             failures.append(failure)
             return failures
         elif 9 == self.current_round:
-            failure = []
-            failure.append(NodeFailure(0, 1))
+            failure = [NodeFailure(0, 1)]
             failures.append(failure)
             return failures
         elif 11 == self.current_round:
-            failure = []
-            failure.append(NodeFailure(2, 0))
-            failure.append(NodeFailure(2, 1))
-            failure.append(NodeFailure(2, 3))
+            failure = [NodeFailure(2, 0), NodeFailure(2, 1), NodeFailure(2, 3)]
             failures.append(failure)
         elif 13 == self.current_round:
-            failure = []
-            failure.append(NodeFailure(1, 2))
+            failure = [NodeFailure(1, 2)]
             failures.append(failure)
         elif 15 == self.current_round:
-            failure = []
-            failure.append(NodeFailure(1, 0))
-            failure.append(NodeFailure(1, 2))
-            failure.append(NodeFailure(1, 3))
+            failure = [NodeFailure(1, 0), NodeFailure(1, 2), NodeFailure(1, 3)]
             failures.append(failure)
         elif 17 == self.current_round:
-            failure = []
-            failure.append(NodeFailure(2, 1))
+            failure = [NodeFailure(2, 1)]
             failures.append(failure)
         elif 19 == self.current_round:
-            failure = []
-            failure.append(NodeFailure(2, 1))
+            failure = [NodeFailure(2, 1)]
             failures.append(failure)
         else:
             failure = []
