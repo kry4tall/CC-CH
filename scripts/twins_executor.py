@@ -83,7 +83,7 @@ class TwinsRunner:
 
     def run_(self):
         self.init_queue()
-        flag_x = True
+        flag_x = False
         while len(self.state_queue) != 0:
             phase_state = self.state_queue.popleft()
             phase_state_key = phase_state.to_key()
@@ -96,12 +96,7 @@ class TwinsRunner:
             node_failure_setting = NodeFailureSettings(self.num_of_nodes + self.num_of_twins, 1 + self.num_of_twins,
                                                        current_round, current_round_leader)
             self.failures = node_failure_setting.failures
-            for i, failure in enumerate(self.failures):
-                # a = True
-                # if current_round == 3 and i == 1 or current_round == 4 and i == 0 or current_round == 5 and i == 0:
-                #     a = False
-                # if a:
-                #     continue
+            for index, failure in enumerate(self.failures):
                 network = self._init_network()
                 self.set_network_by_phase_state(network, phase_state, current_round)
                 if current_round % 2 == 0:
@@ -118,7 +113,7 @@ class TwinsRunner:
                 del network
                 new_phase_state.round = current_round
                 new_phase_state.path = deepcopy(phase_state.path)
-                new_phase_state.path.append(i)
+                new_phase_state.path.append(index)
                 new_phase_state.failure = failure
 
                 self.count_merged_paths(current_round, parent_count, phase_state_key, new_phase_state)
@@ -126,13 +121,6 @@ class TwinsRunner:
                 # update count of failure state
                 if new_phase_state.to_key() in self.fail_states_dict_set.keys():
                     self.failure_state_path_count.setdefault(new_phase_state.to_key(), add)
-
-                # It is different between round of sending block and round of sending vote.
-                #  TODO: modify sorting method
-                # if current_round % 2 == 1:
-                #     new_phase_state.set_votes_abs()
-                # else:
-                #     new_phase_state.set_if_bk_same()
 
                 # check duplicate
                 # check safety
@@ -160,7 +148,7 @@ class TwinsRunner:
                         self.list_of_dict_key_and_path_count[current_round - 3][new_phase_state.to_key()] = 0
 
                 if flag_x is True:
-                    file_path = join(self.log_path, f'phase-state-log-{current_round}-failure-{i}.log')
+                    file_path = join(self.log_path, f'phase-state-log-{current_round}-failure-{index}.log')
                     self._print_log(file_path, new_phase_state)
                 # if self.log_path is not None and self.is_safe(new_phase_state) is False:
                 #     file_path = join(self.log_path, f'failure-violating-{self.failed_times}.log')
