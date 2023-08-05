@@ -9,19 +9,28 @@ class NodeFailureSettings:
         self.bin_num_len = num_of_leaders * (num_of_processes - 1)
         """ 最多生成depth个failure """
         self.depth = int(math.pow(2, self.bin_num_len))
-        # self.failures = self.get_failures(leader_name)
-        self.failures = self.get_failures_for_reproduce1()
+        self.failures = self.get_failures(leader_name)
+        # self.failures = self.get_failures_for_reproduce1()
 
     def get_random_failures(self):
         pass
 
     def get_failures(self, leader_name):
         failures = []
+
+        follower_list = []
+        for i in range(self.num_of_processes):
+            if i is not leader_name:
+                follower_list.append(i)
+
         for failure_num in range(self.depth):
             failure = []
+
+            # generate binary num of index (from 0 to depth)
             bin_num = bin(failure_num).removeprefix('0b')
             for j in range(self.bin_num_len - len(bin_num)):
                 bin_num = '0' + bin_num
+
             for i in range(self.bin_num_len):
                 current_bit = bin_num[i]
                 if current_bit == '1':
@@ -30,12 +39,12 @@ class NodeFailureSettings:
                         sender = leader_name
                         failure.append(
                             NodeFailure(sender,
-                                        i % self.num_of_processes))
+                                        follower_list[i]))
                     else:
                         # vote round
                         receiver = leader_name
                         failure.append(
-                            NodeFailure(i % self.num_of_processes,
+                            NodeFailure(follower_list[i],
                                         receiver))
             failures.append(failure)
 
